@@ -1,65 +1,251 @@
-# 一个基于Vue3.2 + ElementPlus的Web思维导图
+# MindMap с авторизацией
 
-## 项目预览
-### 项目地址：[思维导图](https://huangyuanyin.gitee.io/hyy-vue3-mindmap/#/)
-![image](https://github.com/huangyuanyin/hyy-vue3-mindMap/assets/42410679/de1f7a5c-b9a8-443c-ada7-ba85728f6760)
-![image](https://github.com/huangyuanyin/hyy-vue3-mindMap/assets/42410679/ba50db92-df06-4ff0-8621-ab089c685fba)
-![image](https://github.com/huangyuanyin/hyy-vue3-mindMap/assets/42410679/3fda4eb2-f473-40b3-afcd-bd10bbcee52c)
+Веб-приложение для создания ментальных карт с системой авторизации пользователей.
 
+## Возможности
 
+- ✅ Создание и редактирование ментальных карт
+- ✅ Система регистрации и авторизации пользователей
+- ✅ Ролевая модель доступа (RBAC)
+- ✅ JWT токены для аутентификации
+- ✅ Многоязычная поддержка (русский, английский, китайский)
+- ✅ PostgreSQL для хранения данных
+- ✅ Docker Compose для развертывания
 
+## Технологии
 
-## 特性
+### Frontend
+- Vue.js 3
+- Vue Router
+- Vue I18n
+- Simple Mind Map
 
-- [x] 插件化架构，除核心功能外，其他功能作为插件提供，按需使用，减小整体体积
-- [x] 支持逻辑结构图、思维导图、组织结构图、目录组织图、时间轴（横向、竖向）、鱼骨图等结构
-- [x] 内置多种主题，允许高度自定义样式，支持注册新主题
-- [x] 节点内容支持文本（普通文本、富文本）、图片、图标、超链接、备注、标签、概要
-- [x] 支持画布拖动、缩放
-- [x] 支持右键按住多选
-- [x] 节点支持拖拽（拖拽移动、自由调整）、多种节点形状，支持使用 DDM 完全自定义节点内容
-- [x] 支持鼠标按键拖动选择和Ctrl+左键两种多选节点方式
-- [x] 支持导出为json、png、svg、pdf、markdown、xmind，支持从json、xmind、markdown导入
-- [x] 支持快捷键、前进后退、关联线、搜索替换、小地图、水印
-- [x] 提供丰富的配置，满足各种场景各种使用习惯
+### Backend
+- Go
+- PostgreSQL
+- Casbin (RBAC)
+- JWT
 
-## 工具库介绍
-1.`simple-mind-map`
-思维导图工具库，框架无关，`Vue`、`React`等框架或无框架都可以使用。
+## Быстрый запуск
 
-2.使用`simple-mind-map`工具库，基于`vue3.2`、`ElementPlus`搭建的在线思维导图。特性：
-
-- [x] 工具栏，支持插入节点、删除节点；编辑节点图片、图标、超链接、备注、标签、概要
-
-- [x] 侧边栏，基础样式设置面板、节点样式设置面板、大纲面板、主题选择面板、结构选择面板
-
-- [x] 导入导出功能；数据默认保存在浏览器本地存储，也支持直接创建、打开、编辑电脑本地文件
-
-- [x] 右键菜单，支持展开、收起、整理布局等操作
-
-- [x] 底部栏，支持节点数量、字数统计；支持切换编辑和只读模式；支持放大缩小；支持全屏切换；支持小地图
-
-## 开发
-
-### 本地开发
+### 1. Клонирование репозитория
 ```bash
-git clone https://github.com/huangyuanyin/hyy-vue3-mindMap.git
-npm i
+git clone <repository-url>
+cd hyy-vue3-mindMap
+```
+
+### 2. Запуск с Docker Compose
+```bash
+# Запуск всех сервисов
+docker-compose up -d
+
+# Просмотр логов
+docker-compose logs -f
+
+# Остановка
+docker-compose down
+```
+
+### 3. Доступ к приложению
+- Веб-интерфейс: http://localhost:8080
+- База данных: localhost:5432
+
+## Разработка
+
+### Запуск в режиме разработки
+```bash
+# Установка зависимостей
+npm install
+
+# Запуск только бэкенда
+cd api
+docker-compose up -d postgres
+go run main.go
+
+# Запуск фронтенда (в другом терминале)
 npm run serve
 ```
 
-## 后期计划
-- [ ] 将项目从 vue-cli 迁移至 vite
-- [ ] 将项目由 JS 改至 TS编写
+### Структура проекта
+```
+hyy-vue3-mindMap/
+├── src/
+│   ├── components/
+│   │   ├── Auth/           # Компоненты авторизации
+│   │   │   ├── Login.vue
+│   │   │   ├── Register.vue
+│   │   │   └── AuthWrapper.vue
+│   │   └── MindMapList.vue # Список ментальных карт
+│   ├── lang/               # Файлы локализации
+│   │   ├── ru_ru.js        # Русский
+│   │   ├── en_us.js        # Английский
+│   │   └── zh_cn.js        # Китайский
+│   ├── utils/
+│   │   └── auth.js         # Утилиты авторизации
+│   ├── pages/              # Страницы приложения
+│   └── App.vue             # Главный компонент
+├── api/                    # Go бэкенд
+│   ├── auth/              # Сервис авторизации
+│   ├── models/            # Модели данных
+│   │   ├── user.go
+│   │   ├── post.go
+│   │   └── mindmap.go
+│   ├── repository/        # Слой доступа к данным
+│   │   ├── migrations/    # Миграции БД
+│   │   ├── user_repository.go
+│   │   ├── post_repository.go
+│   │   └── mindmap_repository.go
+│   └── main.go           # Главный файл
+├── docker-compose.yaml    # Конфигурация Docker
+├── nginx.conf            # Конфигурация nginx
+└── Dockerfile            # Docker образ
+```
 
-# 特别说明
+## API Endpoints
 
-本项目较粗糙，未进行完整测试，功能尚不是很完善，性能也存在一些问题，仅用于学习和参考，请勿用于实际项目。
+### Авторизация
+- `POST /auth/login` - Вход в систему
+- `POST /auth/register` - Регистрация
+- `GET /auth/logout` - Выход из системы
+- `GET /auth/check` - Проверка авторизации
+- `GET /auth/user` - Информация о пользователе
 
-本项目基于https://github.com/wanglin2/mind-map 上重构vue3 + elementplus版本。
+### Ментальные карты
+- `GET /api/mindmaps` - Список карт пользователя
+- `POST /api/mindmaps` - Создание новой карты
+- `GET /api/mindmaps/{id}` - Получение карты
+- `PUT /api/mindmaps/{id}` - Обновление карты
+- `DELETE /api/mindmaps/{id}` - Удаление карты
+- `GET /api/mindmaps/public` - Список публичных карт
 
-项目内置的主题和图标来自于：
+## Роли и права доступа
 
-[百度脑图](https://naotu.baidu.com/)
+### Пользователь (user)
+- Создание и редактирование своих ментальных карт
+- Просмотр публичных карт
 
-[知犀思维导图](https://www.zhixi.com/)
+### Автор (author)
+- Все права пользователя
+- Публикация карт
+
+### Администратор (admin)
+- Все права
+- Управление пользователями
+- Доступ ко всем картам
+
+## База данных
+
+### Таблица users
+- `id` - Уникальный идентификатор
+- `name` - Имя пользователя
+- `email` - Email (уникальный)
+- `password` - Хешированный пароль
+- `role` - Роль пользователя
+- `created_at` - Время создания
+- `updated_at` - Время обновления
+
+### Таблица mindmaps
+- `id` - Уникальный идентификатор
+- `title` - Заголовок карты
+- `data` - JSON данные карты
+- `user_id` - ID владельца карты
+- `is_public` - Публичная ли карта
+- `created_at` - Время создания
+- `updated_at` - Время обновления
+
+## Безопасность
+
+- Пароли хешируются с помощью bcrypt
+- JWT токены для аутентификации
+- RBAC модель доступа с Casbin
+- Проверка прав на уровне middleware
+- Защита от CSRF атак
+
+## Конфигурация
+
+### Переменные окружения
+Создайте файл `.env` в папке `api/`:
+```env
+POSTGRES_DB=mindmap_db
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=password
+POSTGRES_HOST=localhost:5432
+PORT=8000
+LOG_LEVEL=info
+```
+
+### Проксирование в разработке
+В `vue.config.js` настроено проксирование запросов к API:
+```javascript
+devServer: {
+  proxy: {
+    '/auth': {
+      target: 'http://localhost:8000',
+      changeOrigin: true
+    },
+    '/api': {
+      target: 'http://localhost:8000',
+      changeOrigin: true
+    }
+  }
+}
+```
+
+## Развертывание
+
+### Продакшн
+```bash
+# Сборка и запуск
+docker-compose -f docker-compose.yaml up -d
+
+# Проверка статуса
+docker-compose ps
+
+# Просмотр логов
+docker-compose logs -f mindmap-frontend
+docker-compose logs -f api-backend
+```
+
+### Миграции базы данных
+```bash
+# Автоматически выполняются при запуске
+# Или вручную:
+docker-compose exec api-backend go run main.go
+```
+
+## Устранение неполадок
+
+### Проблемы с подключением к БД
+```bash
+# Проверка статуса PostgreSQL
+docker-compose ps postgres
+
+# Просмотр логов
+docker-compose logs postgres
+
+# Подключение к БД
+docker-compose exec postgres psql -U postgres -d mindmap_db
+```
+
+### Проблемы с авторизацией
+```bash
+# Проверка логов API
+docker-compose logs api-backend
+
+# Проверка JWT токенов
+# Токены хранятся в cookies
+```
+
+### Проблемы с фронтендом
+```bash
+# Проверка логов nginx
+docker-compose logs mindmap-frontend
+
+# Пересборка образа
+docker-compose build mindmap-frontend
+docker-compose up -d mindmap-frontend
+```
+
+## Лицензия
+
+MIT License

@@ -1,20 +1,22 @@
-const path = require('path')
-const isDev = process.env.NODE_ENV === 'development'
+const { defineConfig } = require('@vue/cli-service')
 
-module.exports = {
-  publicPath: isDev ? '' : '/hyy-vue3-mindmap/',
-  outputDir: './dist', // 打包dist所在路径
-  lintOnSave: false,
-  productionSourceMap: false,
-  transpileDependencies: ['simple-mind-map'],
-  configureWebpack: {
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, './src/')
+module.exports = defineConfig({
+  transpileDependencies: true,
+  devServer: {
+    proxy: {
+      '/auth': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false
+      },
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false
       }
-    },
-    output: {
-      hashFunction: "sha256"
     }
-  }
-}
+  },
+  publicPath: process.env.NODE_ENV === 'production' ? '/' : '/',
+  outputDir: 'dist',
+  assetsDir: 'static'
+})
