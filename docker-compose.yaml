@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # Frontend Vue.js application
+  mindmap-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3001
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    working_dir: /app
+    stdin_open: true
+    tty: true
+    command: npm run serve
+
+  # # Backend API service (if needed - adjust based on project requirements)
+  # mindmap-backend:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.backend
+  #   ports:
+  #     - "3001:3001"
+  #   environment:
+  #     - NODE_ENV=development
+  #     - PORT=3001
+  #   volumes:
+  #     - ./server:/app/server
+  #     - /app/node_modules
+  #   working_dir: /app
+  #   command: npm run server

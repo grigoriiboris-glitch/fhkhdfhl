@@ -461,6 +461,10 @@ export const langList = [
   {
     value: 'en',
     name: 'English'
+  },
+  {
+    value: 'ru',
+    name: 'Русский'
   }
 ]
 

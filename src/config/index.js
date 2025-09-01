@@ -36,17 +36,34 @@ import {
   downTypeList as downTypeListEn
 } from './en'
 
+import {
+  fontFamilyList as fontFamilyListRu,
+  borderDasharrayList as borderDasharrayListRu,
+  lineStyleList as lineStyleListRu,
+  rootLineKeepSameInCurveList as rootLineKeepSameInCurveListRu,
+  backgroundRepeatList as backgroundRepeatListRu,
+  backgroundPositionList as backgroundPositionListRu,
+  shapeList as shapeListRu,
+  sidebarTriggerList as sidebarTriggerListRu,
+  backgroundSizeList as backgroundSizeListRu,
+  downTypeList as downTypeListRu,
+  langList as langListRu
+} from './ru'
+
 const fontFamilyList = {
   zh: fontFamilyListZh,
-  en: fontFamilyListEn
+  en: fontFamilyListEn,
+  ru: fontFamilyListRu
 }
 const borderDasharrayList = {
   zh: borderDasharrayListZh,
-  en: borderDasharrayListEn
+  en: borderDasharrayListEn,
+  ru: borderDasharrayListRu
 }
 const lineStyleList = {
   zh: lineStyleListZh,
-  en: lineStyleListEn
+  en: lineStyleListEn,
+  ru: lineStyleListRu
 }
 const lineStyleMap = {
   zh: lineStyleMapZh,
@@ -54,19 +71,23 @@ const lineStyleMap = {
 }
 const rootLineKeepSameInCurveList = {
   zh: rootLineKeepSameInCurveListZh,
-  en: rootLineKeepSameInCurveListEn
+  en: rootLineKeepSameInCurveListEn,
+  ru: rootLineKeepSameInCurveListRu
 }
 const backgroundRepeatList = {
   zh: backgroundRepeatListZh,
-  en: backgroundRepeatListEn
+  en: backgroundRepeatListEn,
+  ru: backgroundRepeatListRu
 }
 const backgroundPositionList = {
   zh: backgroundPositionListZh,
-  en: backgroundPositionListEn
+  en: backgroundPositionListEn,
+  ru: backgroundPositionListRu
 }
 const backgroundSizeList = {
   zh: backgroundSizeListZh,
-  en: backgroundSizeListEn
+  en: backgroundSizeListEn,
+  ru: backgroundSizeListRu
 }
 const shortcutKeyList = {
   zh: shortcutKeyListZh,
@@ -74,7 +95,8 @@ const shortcutKeyList = {
 }
 const shapeList = {
   zh: shapeListZh,
-  en: shapeListEn
+  en: shapeListEn,
+  ru: shapeListRu
 }
 
 const shapeListMap = {
@@ -84,13 +106,18 @@ const shapeListMap = {
 
 const sidebarTriggerList = {
   zh: sidebarTriggerListZh,
-  en: sidebarTriggerListEn
+  en: sidebarTriggerListEn,
+  ru: sidebarTriggerListRu
 }
 
 const downTypeList = {
   zh: downTypeListZh,
-  en: downTypeListEn
+  en: downTypeListEn,
+  ru: downTypeListRu
 }
+
+// merge language list to include ru without changing existing importers
+const mergedLangList = Array.isArray(langList) ? Array.from(new Set([...(langList || []), ...(langListRu || [])])) : langList
 
 export {
   fontSizeList,
@@ -100,7 +127,7 @@ export {
   lineWidthList,
   store,
   colorList,
-  langList,
+  mergedLangList as langList,
   fontFamilyList,
   borderDasharrayList,
   lineStyleList,

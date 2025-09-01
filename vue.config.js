@@ -12,6 +12,9 @@ module.exports = {
       alias: {
         '@': path.resolve(__dirname, './src/')
       }
+    },
+    output: {
+      hashFunction: "sha256"
     }
   }
 }
