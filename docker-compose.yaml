@@ -9,16 +9,23 @@ services:
     ports:
       - "8080:80"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    working_dir: /app
+    stdin_open: true
+    tty: true
     depends_on:
       - api-backend
     networks:
       - mindmap-network
+    command: npm run serve
 
   api-backend:
     build:
       context: ./api
-      target: production
+      target: development
     container_name: mindmap-api
     environment:
       PORT: 8000
