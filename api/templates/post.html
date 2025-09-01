@@ -1,0 +1,37 @@
+{{ define "content" }}
+<section class="section">
+  <div class="container">
+    <div class="columns">
+      <div class="column is-8 is-offset-2">
+        <div class="card article">
+          <div class="card-content">
+            <h1 class="title">{{ .Post.Title }}</h1>
+            <div class="content article-body">
+              {{ .Post.Content }}
+            </div>
+            <div class="has-text-grey-light is-size-7 mt-4">
+              <p>Создан: {{ .Post.CreatedAt.Format "02.01.2006 15:04" }}</p>
+              {{ if ne .Post.CreatedAt .Post.UpdatedAt }}
+                <p>Обновлен: {{ .Post.UpdatedAt.Format "02.01.2006 15:04" }}</p>
+              {{ end }}
+            </div>
+          </div>
+          {{ if $.User }}
+            {{ if or (eq $.User.UserID .Post.UserID) (eq $.User.Role "admin") }}
+            <footer class="card-footer">
+              <a href="/post/{{ .Post.ID }}/edit" class="card-footer-item">Редактировать</a>
+              <a href="/post/{{ .Post.ID }}/delete" class="card-footer-item" 
+                 onclick="return confirm('Вы уверены, что хотите удалить этот пост?')">Удалить</a>
+            </footer>
+            {{ end }}
+          {{ end }}
+        </div>
+        
+        <div class="mt-4">
+          <a href="/" class="button is-info">← Назад к списку постов</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{{ end }}

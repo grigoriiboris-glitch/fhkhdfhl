@@ -1,0 +1,50 @@
+{{ define "default" }}
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>Go Blog</title>
+</head>
+
+<body>
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="/">
+        <strong>Go Blog</strong>
+      </a>
+    </div>
+
+    <div class="navbar-end">
+      <div class="navbar-item">
+        <div class="buttons">
+          {{if .User}}
+            <span class="navbar-item">
+              Привет, {{.User.Name}} ({{.User.Role}})
+            </span>
+            <a class="button is-info" href="/posts/new">
+              <strong>Создать пост</strong>
+            </a>
+            <a class="button is-danger" href="/auth/logout">
+              <strong>Выйти<cc/strong>
+            </a>
+          {{else}}
+            <a class="button is-primary" href="/auth/login">
+              <strong>Войти</strong>
+            </a>
+            <a class="button is-info" href="/auth/register">
+              <strong>Регистрация</strong>
+            </a>
+          {{end}}
+        </div>
+      </div>
+    </div>
+  </nav>
+  {{ template "content" . }}
+</body>
+
+</html>
+{{ end }}

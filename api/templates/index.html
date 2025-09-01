@@ -1,0 +1,48 @@
+{{ define "content" }}
+<section class="section">
+  <div class="container">
+    <h1 class="title">Блог посты</h1>
+
+    {{ if .Posts }}
+    <div class="columns is-multiline">
+      {{ range .Posts }}
+      <div class="column is-one-third">
+        <div class="card">
+          <div class="card-content">
+            <p class="title">
+              <a href="/post/{{ .ID }}">{{ .Title }}</a>
+            </p>
+            <p class="content">
+              {{ printf "%.100s" .Content }}...
+            </p>
+            <p class="has-text-grey-light is-size-7">
+              Создан: {{ .CreatedAt.Format "02.01.2006 15:04" }}
+            </p>
+          </div>
+          {{ if $.User }}
+            {{ if or (eq $.User.UserID .UserID) (eq $.User.Role "admin") }}
+            <footer class="card-footer">
+              <a href="/post/{{ .ID }}/edit" class="card-footer-item">Редактировать</a>
+              <a href="/post/{{ .ID }}/delete" class="card-footer-item" 
+                 onclick="return confirm('Вы уверены, что хотите удалить этот пост?')">Удалить</a>
+            </footer>
+            {{ end }}
+          {{ end }}
+        </div>
+      </div>
+      {{ end }}
+    </div>
+    {{ else }}
+    <div class="empty-state has-text-centered">
+      <p class="subtitle">Пока нет постов.</p>
+      {{ if .User }}
+        <a href="/posts/new" class="button is-primary">Создать первый пост</a>
+      {{ else }}
+        <p class="has-text-grey">Войдите в систему, чтобы создать пост</p>
+        <a href="/auth/login" class="button is-primary">Войти</a>
+      {{ end }}
+    </div>
+    {{ end }}
+  </div>
+</section>
+{{ end }}

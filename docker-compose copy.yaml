@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  mindmap-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mindmap-frontend
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    working_dir: /app
+    stdin_open: true
+    tty: true
+    depends_on:
+      - api-backend
+    networks:
+      - mindmap-network
+    command: npm run serve
+
+  api-backend:
+    build:
+      context: ./api
+      target: development
+    container_name: mindmap-api
+    environment:
+      PORT: 8000
+      LOG_LEVEL: info
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: mindmap_db
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mindmap-network
+    volumes:
+      - ./api:/app
+
+  postgres:
+    image: postgres:bookworm
+    restart: always
+    container_name: mindmap-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: mindmap_db
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: [CMD-SHELL, "sh -c 'pg_isready -U postgres -d mindmap_db'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - mindmap-network
+
+  migrate:
+    image: migrate/migrate
+    container_name: mindmap-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mindmap-network
+    volumes:
+      - ./api/repository/migrations/:/migrations
+    command: ["-path", "/migrations/", "-database", "postgres://postgres:password@postgres/mindmap_db?sslmode=disable", "up"]
+
+volumes:
+  postgres-data:
+
+networks:
+  mindmap-network:
+    driver: bridge
