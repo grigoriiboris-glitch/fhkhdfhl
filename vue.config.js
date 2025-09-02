@@ -1,7 +1,6 @@
-const { defineConfig } = require('@vue/cli-service')
-
-module.exports = defineConfig({
-  transpileDependencies: true,
+module.exports = {
+  transpileDependencies: [],
+  
   devServer: {
     proxy: {
       '/auth': {
@@ -16,7 +15,8 @@ module.exports = defineConfig({
       }
     }
   },
+  
   publicPath: process.env.NODE_ENV === 'production' ? '/' : '/',
   outputDir: 'dist',
   assetsDir: 'static'
-})
+}
