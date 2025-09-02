@@ -42,6 +42,20 @@ services:
     volumes:
       - ./api:/app
 
+  caddy:
+    image: caddy
+    container_name: mindmap-caddy
+    depends_on:
+      - api-backend
+    ports:
+      - 80:80
+    volumes:
+      - caddy-config:/config
+      - caddy-data:/data
+      - ./api/Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      - mindmap-network
+
   postgres:
     image: postgres:bookworm
     restart: always
@@ -76,6 +90,8 @@ services:
 
 volumes:
   postgres-data:
+  caddy-config:
+  caddy-data:
 
 networks:
   mindmap-network:

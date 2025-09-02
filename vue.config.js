@@ -31,7 +31,7 @@ module.exports = {
       }
     }
   },
-  
+  lintOnSave: false,
   publicPath: isDev ? '' : '/hyy-vue3-mindmap/',
   //assetsDir: 'static'
 }

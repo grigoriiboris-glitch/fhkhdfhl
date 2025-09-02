@@ -10,3 +10,6 @@ app:
 	docker-compose up api-backend
 f:
 	docker-compose up mindmap-frontend
+
+m:
+	docker-compose up migrate
