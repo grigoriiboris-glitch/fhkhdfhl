@@ -1,6 +1,22 @@
+const path = require('path')
+const isDev = process.env.NODE_ENV === 'development'
+
+
 module.exports = {
-  transpileDependencies: [],
-  
+  lintOnSave: false,
+  outputDir: './dist',
+  productionSourceMap: false,
+  transpileDependencies: ['simple-mind-map'],
+  configureWebpack: {
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src/')
+      }
+    },
+    output: {
+      hashFunction: "sha256"
+    }
+  },
   devServer: {
     proxy: {
       '/auth': {
@@ -16,7 +32,6 @@ module.exports = {
     }
   },
   
-  publicPath: process.env.NODE_ENV === 'production' ? '/' : '/',
-  outputDir: 'dist',
-  assetsDir: 'static'
+  publicPath: isDev ? '' : '/hyy-vue3-mindmap/',
+  //assetsDir: 'static'
 }
