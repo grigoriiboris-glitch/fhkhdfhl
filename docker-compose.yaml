@@ -4,10 +4,10 @@ services:
   mindmap-frontend:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.frontend
     container_name: mindmap-frontend
     ports:
-      - "8080:80"
+      - "8080:8080"
     environment:
       - NODE_ENV=development
     volumes:
@@ -20,7 +20,7 @@ services:
       - api-backend
     networks:
       - mindmap-network
-    command: npm run serve
+    command: sh -c "npx vue-cli-service serve --port 8080 --host 0.0.0.0"
 
   api-backend:
     build:
@@ -47,6 +47,7 @@ services:
     container_name: mindmap-caddy
     depends_on:
       - api-backend
+      - mindmap-frontend
     ports:
       - 80:80
     volumes:

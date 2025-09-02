@@ -13,3 +13,5 @@ f:
 
 m:
 	docker-compose up migrate
+c:
+	docker-compose up caddy
