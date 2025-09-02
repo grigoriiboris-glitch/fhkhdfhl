@@ -31,6 +31,9 @@
           <a href="https://github.com/wanglin2/mind-map" target="_blank">Github</a>
         </div>
       </div>
+      <div class="authBox">
+        <slot name="right"></slot>
+      </div>
     </div>
   </div>
 </template>
@@ -86,13 +89,13 @@ const jumpClient = () => {
 
 <style lang="less" scoped>
 .indexHeaderContainer {
-  position: fixed;
+  //position: fixed;
   left: 0;
   top: 0;
   width: 100%;
   height: 76px;
   transition: all 0.5s;
-  background-color: transparent;
+  background-color: rgb(180, 212, 255);
   z-index: 999;
 
   &.active {

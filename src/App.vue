@@ -5,17 +5,16 @@
       @auth-success="handleAuthSuccess"
     />
     <div v-else class="app-container">
-      <header class="app-header">
-        <div class="header-content">
-          <h1>MindMap</h1>
+      <Header>
+        <template #right>
           <div class="user-info">
             <span>{{ userInfo?.name || userInfo?.email }}</span>
             <button @click="handleLogout" class="logout-btn">
               {{ $t('auth.logout') }}
             </button>
           </div>
-        </div>
-      </header>
+        </template>
+      </Header>
       <main class="app-main">
         <router-view />
       </main>
@@ -25,12 +24,14 @@
 
 <script>
 import AuthWrapper from './components/Auth/AuthWrapper.vue'
+import Header from './pages/Index/components/Header.vue'
 import { checkAuth, getUserInfo, logout } from './utils/auth'
 
 export default {
   name: 'App',
   components: {
-    AuthWrapper
+    AuthWrapper,
+    Header
   },
   data() {
     return {
