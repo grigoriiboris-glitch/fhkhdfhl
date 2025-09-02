@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
+import baseStore from './components/base/store'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import '@/assets/icon-font/iconfont.css'
@@ -13,6 +14,14 @@ import i18n from './i18n.js'
 // const vConsole = new VConsole()
 
 const app = createApp(App)
+
+// register base layout modules under their own namespace if missing
+if (!store.hasModule('layout')) {
+  store.registerModule('layout', baseStore.state ? baseStore.state.layout || baseStore._modulesNamespaceMap['layout/']?.context?.module : baseStore)
+}
+if (!store.hasModule('dashboard')) {
+  store.registerModule('dashboard', baseStore.state ? baseStore.state.dashboard || baseStore._modulesNamespaceMap['dashboard/']?.context?.module : baseStore)
+}
 
 app.config.productionTip = false
 
