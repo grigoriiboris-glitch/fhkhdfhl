@@ -1,5 +1,5 @@
 # Use Go 1.21 alpine as base image
-FROM golang:1.21-alpine AS base
+FROM golang:1.24-alpine AS base
 
 # Development stage
 # =============================================================================
@@ -18,8 +18,8 @@ COPY go.mod go.sum ./
 # Install dependencies
 RUN go mod download
 
-# Start air for live reloading
-CMD ["air"]
+# Start air for live reloading (ensure go.mod is tidy first)
+CMD ["sh", "-lc", "go mod tidy && air"]
 
 # Builder stage
 # =============================================================================

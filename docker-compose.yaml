@@ -27,6 +27,7 @@ services:
       context: ./api
       target: development
     container_name: mindmap-api
+    command: sh -c "go mod tidy && go build -o main . && ./main"
     environment:
       PORT: 8000
       LOG_LEVEL: info

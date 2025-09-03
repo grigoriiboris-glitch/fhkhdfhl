@@ -119,11 +119,6 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	file, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)  
-    if err != nil { log.Fatal(err) }  
-    log.SetOutput(file)  
-    log.Println("Сообщение будет записано в файл app.log")
-
 	// Маршруты авторизации (без middleware авторизации)
 	mux.HandleFunc("/auth/login", loginHandler)
 	mux.HandleFunc("/auth/register", registerHandler)
@@ -436,7 +431,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 }
 
 // Auth handlers
-func loginHandler(w http.ResponseWriter, r *http.Request) {return
+func loginHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("loginHandler: method=%s, url=%s", r.Method, r.URL.String())
 	if r.Method == "POST" {
 		// Логируем тело запроса

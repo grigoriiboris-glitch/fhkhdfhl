@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/betterstack-community/go-blog/models"
+	"github.com/mymindmap/api/models"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

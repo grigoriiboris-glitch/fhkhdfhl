@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/betterstack-community/go-blog/models"
+	"github.com/mymindmap/api/models"
 )
 
 type PostRepository struct {
