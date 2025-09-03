@@ -3,9 +3,9 @@
     <nav class="d-flex flex-column" :class="{ sidebar: true, sidebarStatic, sidebarOpened }"
       @mouseenter="sidebarMouseEnter" @mouseleave="sidebarMouseLeave">
       <header class="logo">
-        <router-link :to="{ name: 'chat-bots' }"><span class="primary-word">constructor</span> <span
+        <router-link :to="{ name: 'Home' }"><span class="primary-word">MIND</span> <span
             class="secondary-word">
-            Bot </span></router-link>
+            MAP </span></router-link>
       </header>
       <ul class="nav" v-if="currentItems.length">
         <NavLink v-for="link in currentItems" :key="link.title" :activeItem="activeItem" :header="link.title"
@@ -45,10 +45,6 @@
               </div> -->
 
         </div>
-      </div>
-
-      <div class="flex mt-auto mb-5 justify-content-start ml-4">
-        <router-link :to="{ name: 'cabinets' }"><el-button type="warning">{{$t('Offices')}}</el-button></router-link>
       </div>
     </nav>
 
@@ -91,126 +87,25 @@ const { User } = useAuth();
 
 
 const leftbarItems = ref([
-  { title: t('Pricing plans'), icon: 'typcn-spanner', to: 'tariffs', items: [], roles: [1] },
-  { title: t('Integration cases'), icon: 'typcn-spanner', to: '', items: [], roles: [1] },
-  {
-    title: t('Instructions'),
-    icon: 'typcn-spanner',
-    to: '',
-    items: [{ title: t('Pricing plans'), icon: 'typcn-spanner', to: '', items: [] }],
-    roles: [1]
-  },
-  {
-    title: t('Knowledge base'),
-    icon: 'typcn-book',
-    to: 'help',
-    roles: [1, 2, 3]
-  },
+  // {
+  //   title: t('Knowledge base'),
+  //   icon: 'typcn-book',
+  //   to: 'help',
+  //   roles: [1, 2, 3]
+  // },
 ]);
 const leftbarItemsBot = ref([
-  {
-    title: t('Analytics'),
-    icon: 'typcn-chart-bar',
-    to: 'bot-statistic',
-    roles: [1, 2]
-  },
-  {
-    title: t('Constructor'),
-    icon: 'typcn-device-laptop',
-    to: 'constructor',
-    roles: [1, 2]
-  },
-  {
-    title: t('Dialogues'),
-    icon: 'typcn-messages',
-    to: 'chat',
-    roles: [1, 2, 3]
-  },
-  {
-    title: t('Users'),
-    icon: 'typcn-group',
-    to: 'users',
-    roles: [1, 2]
-  },
-  {
-    title: t('Mailing'),
-    icon: 'typcn-mail',
-    to: 'mailings',
-    roles: [1, 2]
-  },
 
-  {
-    title: t('Notifications'),
-    icon: 'typcn-volume',
-    to: 'events',
-    roles: [1, 2]
-  },
-  {
-    title: t('Integrations'),
-    icon: 'typcn-flow-switch',
-    to: 'integration',
-    roles: [1, 2]
-  },
-
-  {
-    title: t('Knowledge base'),
-    icon: 'typcn-book',
-    to: 'help',
-    roles: [1, 2, 3]
-  },
-  {
-    title: t('Settings'),
-    icon: 'typcn-cog-outline',
-    to: 'settings',
-    roles: [1, 2]
-  }
 ]);
 
 const adminItems = ref([
 
-  {
-    title: t('Customers'),
-    admin: true,
-    icon: 'typcn-credit-card',
-    to: 'users_admin'
-  },
-  {
-    title: t('Payments'),
-    admin: true,
-    icon: 'typcn-credit-card',
-    to: 'payments_admin'
-  },
-  {
-    title: t('Pricing plans'),
-    admin: true,
-    icon: 'typcn-document-text',
-    to: 'tariffs_admin'
-  },
-  {
-    title: t('Payment systems'),
-    admin: true,
-    icon: 'typcn-input-checked',
-    to: 'payment_systems_admin'
-  },
-  {
-    title: t('Settings'),
-    admin: true,
-    icon: 'typcn-cog-outline',
-    to: 'appSettings'
-  },
-  {
-    title: t('Articles'),
-    admin: true,
-    icon: 'typcn-book',
-    to: 'article_admin'
-  },
-  {
-    title: t('Categories'),
-    admin: true,
-    icon: 'typcn-book',
-    to: 'category_admin'
-  }
-
+  // {
+  //   title: t('Customers'),
+  //   admin: true,
+  //   icon: 'typcn-credit-card',
+  //   to: 'users_admin'
+  // },
 ]);
 
 const currentItems = computed(() => {

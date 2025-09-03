@@ -19,10 +19,18 @@ const app = createApp(App)
 if (!store.hasModule('layout')) {
   store.registerModule('layout', baseStore.state ? baseStore.state.layout || baseStore._modulesNamespaceMap['layout/']?.context?.module : baseStore)
 }
-if (!store.hasModule('dashboard')) {
-  store.registerModule('dashboard', baseStore.state ? baseStore.state.dashboard || baseStore._modulesNamespaceMap['dashboard/']?.context?.module : baseStore)
-}
+// if (!store.hasModule('dashboard')) {
+//   store.registerModule('dashboard', baseStore.state ? baseStore.state.dashboard || baseStore._modulesNamespaceMap['dashboard/']?.context?.module : baseStore)
+// }
 
-app.config.productionTip = false
+app.config.productionTip = false;
+window.log = console.log;
 
-app.use(ElementPlus).use(VueViewer).use(store).use(router).use(i18n).mount('#app')
+app.use(ElementPlus);
+app.use(VueViewer);
+app.use(store);
+app.use(router);
+app.use(i18n);
+
+
+app.mount('#app');

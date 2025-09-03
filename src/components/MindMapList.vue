@@ -76,7 +76,7 @@ export default {
         })
         
         if (response.ok) {
-          this.mindMaps = await response.json()
+          //this.mindMaps = await response.json()
         } else {
           console.error('Failed to load mindmaps')
         }

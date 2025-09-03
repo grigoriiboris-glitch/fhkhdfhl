@@ -1,59 +1,54 @@
 <template>
   <div id="app">
     <AuthWrapper 
-      v-if="!isAuthenticated" 
+      v-if="!User" 
       @auth-success="handleAuthSuccess"
     />
     <div v-else class="app-container">
-      <BaseLayout />
+      <BaseLayout v-if="$route.name !== 'EditMap'" />
+      <router-view v-else/>
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue'
 import AuthWrapper from './components/Auth/AuthWrapper.vue'
 import BaseLayout from './components/base/components/Layout/Layout.vue'
-import { me, getUserInfo, logout } from './utils/auth'
+import useAuth from '@/composition/useAuth';
 
-export default {
-  name: 'App',
-  components: {
-    AuthWrapper,
-    BaseLayout
-  },
-  data() {
-    return {
-      isAuthenticated: false,
-      userInfo: null
-    }
-  },
-  async mounted() {
-    await this.checkAuthentication()
-  },
-  methods: {
-    async checkAuthentication() {
-      const authenticated = await me()
-      if (authenticated) {
-        this.isAuthenticated = true
-        this.userInfo = authenticated
-      }
-    },
-    async handleAuthSuccess() {
-      this.isAuthenticated = true
-      this.userInfo = await me()
-    },
-    async handleLogout() {
-      const success = await logout()
-      if (success) {
-        this.isAuthenticated = false
-        this.userInfo = null
-      }
-    }
+const { me, logout, User } = useAuth();
+
+const isAuthenticated = ref(false)
+const userInfo = ref(null)
+
+const checkAuthentication = async () => {
+  const authenticated = await me()
+  if (authenticated) {
+    isAuthenticated.value = true
+    userInfo.value = authenticated
   }
 }
+
+const handleAuthSuccess = async () => {
+  isAuthenticated.value = true
+  userInfo.value = await me()
+}
+
+// const handleLogout = async () => {
+//   const success = await logout()
+//   if (success) {
+//     isAuthenticated.value = false
+//     userInfo.value = null
+//   }
+// }
+
+onMounted(async () => {
+  await checkAuthentication()
+})
 </script>
 
-<style>
+<style lang="scss">
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

@@ -3,6 +3,7 @@ import IndexPage from '@/pages/Index/Index'
 import MindMapList from '@/components/MindMapList.vue'
 import Login from '@/components/Auth/Login.vue'
 import Register from '@/components/Auth/Register.vue'
+import useAuth from './composition/useAuth'
 
 const routes = [
   {
@@ -52,6 +53,25 @@ const routes = [
     },
   },
   {
+    path: '/profile',
+    name: 'profile',
+    component: Login,
+     meta: {
+      title: 'profile',
+      roles: [1, 2,3],
+    },
+  },
+  {
+    path: '/tariffs',
+    name: 'tariffs',
+    component: Login,
+     meta: {
+      title: 'tariffs',
+      roles: [1, 2,3],
+    },
+  },
+  
+  {
     path: '/register',
     name: 'Register',
     component: Register,
@@ -74,13 +94,14 @@ router.beforeEach(async (to, from, next) => {
   const dataRoute = ['login', 'register', 'forgot'];
 
   if (!dataRoute.includes(to.name) && !User.value) {
-    await me()
+    await me();
     if (!User.value) {
       next('/login')
     }
   }
 
   if (to.name === "login" && User.value) {
+    log(User.value)
     next('/');
   }
 

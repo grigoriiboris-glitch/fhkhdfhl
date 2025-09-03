@@ -6,7 +6,7 @@
         <img :src="Menu" alt="menu" />
       </button>
 
-      <router-link class="navbar-brand d-md-none" :to="{ name: 'chat-bots' }">
+      <router-link class="navbar-brand d-md-none" :to="{ name: 'Home' }">
         <i class="fa fa-circle text-primary me-1"></i>
         <i class="fa fa-circle text-danger"></i>
         sing
@@ -17,7 +17,7 @@
       <div class="collapse navbar-collapse ml-4">
         <ul class="navbar-nav me-auto">
           <li class="nav-item">
-            <breadcrumbs></breadcrumbs>
+            <!-- <breadcrumbs></breadcrumbs> -->
           </li>
         </ul>
         <ul v-if="1 == 2" class="nav">
@@ -62,7 +62,7 @@
             <ul @mouseleave="dropdown = false" v-if="User" :class="dropdown ? 'show' : ''" class="dropdown-menu dropdown-menu-right ">
               <router-link class="dropdown-item" :to="{
                 name: 'profile',
-                params: { user_id: User.id }
+                params: { user_id: 1/*User.id*/ }
               }"><img :src="Userimg" class="me-2" />{{ $t('My profile') }}</router-link>
 
               <div class="dropdown-divider"></div>
@@ -106,6 +106,7 @@ import Document from '../../assets/sidebar/Outline/Document.svg';
 import Envelope from '../../assets/sidebar/Outline/Envelope.svg';
 import Cancel from '../../assets/sidebar/Outline/Cancel.svg';
 import Notifications from '../Notifications/Notifications';
+import BreadCrumbs from './BreadCrumbs.vue';
 
 
 

@@ -87,6 +87,7 @@ export default {
       }
     },
     changeSidebarActive(state, index) {
+      log(state,index)
       state.sidebarActiveElement = index;
     },
     updateLayoutComponentType(state, payload) {
