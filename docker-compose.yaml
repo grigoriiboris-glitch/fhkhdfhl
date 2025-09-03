@@ -27,7 +27,8 @@ services:
       context: ./api
       target: development
     container_name: mindmap-api
-    command: sh -c "go mod tidy && go build -o main . && ./main"
+    #command: sh -c "go mod tidy && go build -o main . && ./main"
+    command: air
     environment:
       PORT: 8000
       LOG_LEVEL: info

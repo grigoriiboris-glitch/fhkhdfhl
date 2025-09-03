@@ -1,8 +1,9 @@
-2025/09/03 08:41:00.829615 Unable to connect to database:failed to connect to `user=postgres database=mindmap_db`: hostname resolving error: lookup postgres on 127.0.0.11:53: server misbehaving
-2025/09/03 08:42:04.449833 Unable to connect to database:failed to connect to `user=postgres database=mindmap_db`: hostname resolving error: lookup postgres on 127.0.0.11:53: server misbehaving
-2025/09/03 08:43:37.937846 REQUEST: method=GET, url=/login, remote=172.21.0.5:34494, content-type=
-2025/09/03 08:43:38.582333 REQUEST: method=GET, url=/login, remote=172.21.0.5:34494, content-type=
-2025/09/03 08:43:51.706851 REQUEST: method=POST, url=/login, remote=172.21.0.5:34494, content-type=application/json
-2025/09/03 08:51:28.040608 REQUEST: method=POST, url=/auth/login, remote=172.21.0.5:39674, content-type=application/json
-2025/09/03 08:51:28.040674 loginHandler: method=POST, url=/auth/login
-2025/09/03 08:51:28.040706 loginHandler POST body: email=, password=
+2025/09/03 09:44:56.378210 REQUEST: method=POST, url=/auth/login, remote=172.21.0.5:54388, content-type=application/json
+2025/09/03 09:44:56.378318 loginHandler: method=POST, url=/auth/login
+2025/09/03 09:44:56.378342 loginHandler POST body: email=, password=
+2025/09/03 10:02:37.217425 REQUEST: method=POST, url=/auth/login, remote=172.21.0.5:47268, content-type=application/json body={"email":"oleg3@gmail.com","password":"oleg3@gmail.com"}
+2025/09/03 10:02:37.217847 loginHandler: method=POST, url=/auth/login
+2025/09/03 10:02:37.277841 REQUEST: method=GET, url=/auth/user, remote=172.21.0.5:47268, content-type= body=
+2025/09/03 10:03:45.965758 REQUEST: method=POST, url=/auth/login, remote=172.21.0.5:49424, content-type=application/json body={"email":"oleg3@gmail.com","password":"oleg3@gmail.com"}
+2025/09/03 10:03:45.966062 loginHandler: method=POST, url=/auth/login
+2025/09/03 10:03:46.015681 REQUEST: method=GET, url=/auth/user, remote=172.21.0.5:49424, content-type= body=

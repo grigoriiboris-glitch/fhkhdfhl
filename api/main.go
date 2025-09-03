@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes" // добавьте этот импорт
 	"context"
 	"embed"
 	"encoding/json"
@@ -424,8 +425,20 @@ func main() {
 // Middleware для логирования всех входящих HTTP-запросов
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("REQUEST: method=%s, url=%s, remote=%s, content-type=%s",
-			r.Method, r.URL.String(), r.RemoteAddr, r.Header.Get("Content-Type"))
+		var bodyStr string
+		if r.Method == "POST" || r.Method == "PUT" || r.Method == "PATCH" {
+			// Читаем тело
+			bodyBytes, err := io.ReadAll(r.Body)
+			if err != nil {
+				log.Printf("Error reading body: %v", err)
+			} else {
+				bodyStr = string(bodyBytes)
+				// Восстанавливаем тело
+				r.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+			}
+		}
+		log.Printf("REQUEST: method=%s, url=%s, remote=%s, content-type=%s body=%s",
+			r.Method, r.URL.String(), r.RemoteAddr, r.Header.Get("Content-Type"), bodyStr)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -433,27 +446,38 @@ func loggingMiddleware(next http.Handler) http.Handler {
 // Auth handlers
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("loginHandler: method=%s, url=%s", r.Method, r.URL.String())
-	if r.Method == "POST" {
-		// Логируем тело запроса
-		if err := r.ParseForm(); err == nil {
-			log.Printf("loginHandler POST body: email=%s, password=%s", r.FormValue("email"), r.FormValue("password"))
-		} else {
-			log.Printf("loginHandler POST body parse error: %v", err)
-		}
+	if r.Method != "POST" {
+		return
 	}
 	switch r.Method {
 	case "GET":
 		w.WriteHeader(http.StatusNoContent)
 	case "POST":
-		if err := r.ParseForm(); err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "Failed to parse form"})
-			return
-		}
 
-		email := r.FormValue("email")
-		password := r.FormValue("password")
+		var email, password string
+		var err error
+
+		// Определяем Content-Type и парсим соответствующим образом
+		contentType := r.Header.Get("Content-Type")
+
+		if strings.Contains(contentType, "application/json") {
+			// Парсим JSON
+			var credentials struct {
+				Email    string `json:"email"`
+				Password string `json:"password"`
+			}
+
+			if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
+				log.Printf("loginHandler JSON parse error: %v", err)
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Invalid JSON format"})
+				return
+			}
+
+			email = credentials.Email
+			password = credentials.Password
+		}
 
 		if email == "" || password == "" {
 			w.Header().Set("Content-Type", "application/json")
@@ -498,16 +522,32 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		w.WriteHeader(http.StatusNoContent)
 	case "POST":
-		if err := r.ParseForm(); err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "Failed to parse form"})
-			return
+		var email, name, password string
+		var err error
+
+		// Определяем Content-Type и парсим соответствующим образом
+		contentType := r.Header.Get("Content-Type")
+
+		if strings.Contains(contentType, "application/json") {
+			// Парсим JSON
+			var credentials struct {
+				Email    string `json:"email"`
+				Password string `json:"password"`
+			}
+
+			if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
+				log.Printf("loginHandler JSON parse error: %v", err)
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Invalid JSON format"})
+				return
+			}
+
+			//email = credentials.Email
+			//password = credentials.Password
+			log.Printf("loginHandler POST JSON: email=%s", email)
 		}
 
-		name := r.FormValue("name")
-		email := r.FormValue("email")
-		password := r.FormValue("password")
 		confirmPassword := r.FormValue("confirm_password")
 
 		if name == "" || email == "" || password == "" {
