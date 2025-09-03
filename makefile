@@ -7,7 +7,7 @@ d:
 	docker-compose down
 
 app:
-	docker-compose up api-backend
+	docker-compose up api-backend --build
 f:
 	docker-compose up mindmap-frontend
 
