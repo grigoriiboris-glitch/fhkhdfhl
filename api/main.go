@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -14,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/mymindmap/api/auth"
+	"github.com/mymindmap/api/handlers"
 	"github.com/mymindmap/api/models"
 	"github.com/mymindmap/api/repository"
 
@@ -73,6 +75,20 @@ func init() {
 func main() {
 	ctx := context.Background()
 
+	// setup file logging to ./logs/server.log
+	if err := os.MkdirAll("logs", 0755); err == nil {
+		logFilePath := filepath.Join("logs", "server.log")
+		if f, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
+			log.SetOutput(io.MultiWriter(os.Stdout, f))
+			log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+			defer f.Close()
+		} else {
+			log.Printf("failed to open log file: %v", err)
+		}
+	} else {
+		log.Printf("failed to create logs directory: %v", err)
+	}
+
 	dbpool, err := pgxpool.New(ctx, conf.PostgresURL)
 	if err != nil {
 		log.Fatal("Unable to create database connection pool:", err)
@@ -98,23 +114,35 @@ func main() {
 	// Создаем общий middleware для авторизации
 	authMiddleware := authService.AuthMiddleware
 
+	// Инициализируем user handlers
+	userHandler := handlers.NewUserHandler(userRepo, authService)
+
+	mux := http.NewServeMux()
+
+	file, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)  
+    if err != nil { log.Fatal(err) }  
+    log.SetOutput(file)  
+    log.Println("Сообщение будет записано в файл app.log")
+
 	// Маршруты авторизации (без middleware авторизации)
-	http.HandleFunc("/auth/login", loginHandler)
-	http.HandleFunc("/auth/register", registerHandler)
-	http.HandleFunc("/auth/logout", logoutHandler)
+	mux.HandleFunc("/auth/login", loginHandler)
+	mux.HandleFunc("/auth/register", registerHandler)
+	mux.HandleFunc("/auth/logout", logoutHandler)
+	mux.HandleFunc("/auth/check", authMiddleware(userHandler.AuthCheck))
+	mux.HandleFunc("/auth/user", authMiddleware(userHandler.GetCurrentUser))
 
 	// Главная страница с постами
-	http.HandleFunc("/", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
 			getPosts(w, r)
 		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			http.Error(w, "Method not allowed base", http.StatusMethodNotAllowed)
 		}
 	}))
 
 	// Создание постов (требует авторизации)
-	http.HandleFunc("/posts/new", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/posts/new", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "POST":
 			// Применяем middleware для проверки прав на создание постов
@@ -124,11 +152,11 @@ func main() {
 			authService.RequirePermission("post", "write")(func(w http.ResponseWriter, r *http.Request) {
 				// Получаем информацию о пользователе из контекста
 				user := auth.GetUserFromContext(r.Context())
-				
+
 				postFormTmpl.ExecuteTemplate(
 					w,
 					"default",
-					struct{ 
+					struct {
 						Post models.Post
 						User *auth.Claims
 					}{models.Post{}, user},
@@ -140,7 +168,7 @@ func main() {
 	}))
 
 	// Редактирование постов (требует авторизации)
-	http.HandleFunc(
+	mux.HandleFunc(
 		"/post/{id}/edit",
 		authMiddleware(func(w http.ResponseWriter, r *http.Request) {
 			switch r.Method {
@@ -158,7 +186,7 @@ func main() {
 					postFormTmpl.ExecuteTemplate(
 						w,
 						"default",
-						struct{ 
+						struct {
 							Post *models.Post
 							User *auth.Claims
 						}{post, user},
@@ -173,7 +201,7 @@ func main() {
 	)
 
 	// Удаление постов (требует авторизации)
-	http.HandleFunc(
+	mux.HandleFunc(
 		"/post/{id}/delete",
 		authMiddleware(func(w http.ResponseWriter, r *http.Request) {
 			switch r.Method {
@@ -186,7 +214,7 @@ func main() {
 	)
 
 	// Просмотр постов (доступно всем, но с информацией о пользователе)
-	http.HandleFunc("/post/{id}", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/post/{id}", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
 			post, err := getPost(r)
@@ -210,7 +238,7 @@ func main() {
 			tmpl.ExecuteTemplate(
 				w,
 				"default",
-				struct{ 
+				struct {
 					Post *models.Post
 					User *auth.Claims
 				}{post, user},
@@ -221,7 +249,7 @@ func main() {
 	}))
 
 	// API endpoints для ментальных карт
-	http.HandleFunc("/api/mindmaps", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/mindmaps", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
 			// Получаем карты пользователя
@@ -231,31 +259,31 @@ func main() {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			
+
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(mindMaps)
 		case "POST":
 			// Создание новой карты
 			user := auth.GetUserFromContext(r.Context())
-			
+
 			var req models.CreateMindMapRequest
 			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 				http.Error(w, "Invalid request body", http.StatusBadRequest)
 				return
 			}
-			
+
 			mindMap := &models.MindMap{
 				Title:    req.Title,
 				Data:     req.Data,
 				UserID:   user.UserID,
 				IsPublic: req.IsPublic,
 			}
-			
+
 			if err := mindMapRepo.Create(r.Context(), mindMap); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			
+
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusCreated)
 			json.NewEncoder(w).Encode(mindMap)
@@ -265,23 +293,23 @@ func main() {
 	}))
 
 	// API endpoint для конкретной карты
-	http.HandleFunc("/api/mindmaps/", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/mindmaps/", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		// Извлекаем ID из URL
 		pathParts := strings.Split(r.URL.Path, "/")
 		if len(pathParts) < 4 {
 			http.Error(w, "Invalid mindmap ID", http.StatusBadRequest)
 			return
 		}
-		
+
 		idStr := pathParts[3]
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
 			http.Error(w, "Invalid mindmap ID", http.StatusBadRequest)
 			return
 		}
-		
+
 		user := auth.GetUserFromContext(r.Context())
-		
+
 		switch r.Method {
 		case "GET":
 			// Получение карты
@@ -294,13 +322,13 @@ func main() {
 				http.Error(w, "Mindmap not found", http.StatusNotFound)
 				return
 			}
-			
+
 			// Проверяем права доступа
 			if mindMap.UserID != user.UserID && !mindMap.IsPublic {
 				http.Error(w, "Access denied", http.StatusForbidden)
 				return
 			}
-			
+
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(mindMap)
 		case "PUT":
@@ -314,28 +342,28 @@ func main() {
 				http.Error(w, "Mindmap not found", http.StatusNotFound)
 				return
 			}
-			
+
 			// Проверяем права доступа
 			if mindMap.UserID != user.UserID {
 				http.Error(w, "Access denied", http.StatusForbidden)
 				return
 			}
-			
+
 			var req models.UpdateMindMapRequest
 			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 				http.Error(w, "Invalid request body", http.StatusBadRequest)
 				return
 			}
-			
+
 			mindMap.Title = req.Title
 			mindMap.Data = req.Data
 			mindMap.IsPublic = req.IsPublic
-			
+
 			if err := mindMapRepo.Update(r.Context(), mindMap); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			
+
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(mindMap)
 		case "DELETE":
@@ -349,18 +377,18 @@ func main() {
 				http.Error(w, "Mindmap not found", http.StatusNotFound)
 				return
 			}
-			
+
 			// Проверяем права доступа
 			if mindMap.UserID != user.UserID {
 				http.Error(w, "Access denied", http.StatusForbidden)
 				return
 			}
-			
+
 			if err := mindMapRepo.Delete(r.Context(), id, user.UserID); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			
+
 			w.WriteHeader(http.StatusNoContent)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -368,7 +396,7 @@ func main() {
 	}))
 
 	// API endpoint для публичных карт
-	http.HandleFunc("/api/mindmaps/public", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/mindmaps/public", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
 			mindMaps, err := mindMapRepo.GetPublic(r.Context())
@@ -376,7 +404,7 @@ func main() {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			
+
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(mindMaps)
 		default:
@@ -385,7 +413,7 @@ func main() {
 	})
 
 	// Health check
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
 			w.Write([]byte("OK"))
@@ -395,21 +423,37 @@ func main() {
 	})
 
 	fmt.Println("Server started on port 8000")
-	log.Fatal(http.ListenAndServe(":8000", nil))
+	log.Fatal(http.ListenAndServe(":8000", loggingMiddleware(mux)))
+}
+
+// Middleware для логирования всех входящих HTTP-запросов
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("REQUEST: method=%s, url=%s, remote=%s, content-type=%s",
+			r.Method, r.URL.String(), r.RemoteAddr, r.Header.Get("Content-Type"))
+		next.ServeHTTP(w, r)
+	})
 }
 
 // Auth handlers
-func loginHandler(w http.ResponseWriter, r *http.Request) {
+func loginHandler(w http.ResponseWriter, r *http.Request) {return
+	log.Printf("loginHandler: method=%s, url=%s", r.Method, r.URL.String())
+	if r.Method == "POST" {
+		// Логируем тело запроса
+		if err := r.ParseForm(); err == nil {
+			log.Printf("loginHandler POST body: email=%s, password=%s", r.FormValue("email"), r.FormValue("password"))
+		} else {
+			log.Printf("loginHandler POST body parse error: %v", err)
+		}
+	}
 	switch r.Method {
 	case "GET":
-		tmpl := template.Must(template.ParseFS(
-			templates,
-			"templates/login.html",
-		))
-		tmpl.ExecuteTemplate(w, "login", nil)
+		w.WriteHeader(http.StatusNoContent)
 	case "POST":
 		if err := r.ParseForm(); err != nil {
-			http.Error(w, "Failed to parse form", http.StatusBadRequest)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Failed to parse form"})
 			return
 		}
 
@@ -417,7 +461,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 
 		if email == "" || password == "" {
-			renderLoginPage(w, "Email и пароль обязательны", "")
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Email и пароль обязательны"})
 			return
 		}
 
@@ -428,31 +474,39 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 		token, err := authService.LoginUser(r.Context(), req)
 		if err != nil {
-			renderLoginPage(w, err.Error(), "")
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 			return
 		}
 
-		// Устанавливаем cookie с токеном
 		authService.SetAuthCookie(w, token)
-
-		// Перенаправляем на главную страницу
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]any{"success": true})
 	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed login", http.StatusMethodNotAllowed)
 	}
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("registerHandler: method=%s, url=%s", r.Method, r.URL.String())
+	if r.Method == "POST" {
+		if err := r.ParseForm(); err == nil {
+			log.Printf("registerHandler POST body: name=%s, email=%s, password=%s, confirm_password=%s",
+				r.FormValue("name"), r.FormValue("email"), r.FormValue("password"), r.FormValue("confirm_password"))
+		} else {
+			log.Printf("registerHandler POST body parse error: %v", err)
+		}
+	}
 	switch r.Method {
 	case "GET":
-		tmpl := template.Must(template.ParseFS(
-			templates,
-			"templates/register.html",
-		))
-		tmpl.ExecuteTemplate(w, "register", nil)
+		w.WriteHeader(http.StatusNoContent)
 	case "POST":
 		if err := r.ParseForm(); err != nil {
-			http.Error(w, "Failed to parse form", http.StatusBadRequest)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Failed to parse form"})
 			return
 		}
 
@@ -462,17 +516,23 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		confirmPassword := r.FormValue("confirm_password")
 
 		if name == "" || email == "" || password == "" {
-			renderRegisterPage(w, "Все поля обязательны", "")
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Все поля обязательны"})
 			return
 		}
 
 		if password != confirmPassword {
-			renderRegisterPage(w, "Пароли не совпадают", "")
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Пароли не совпадают"})
 			return
 		}
 
 		if len(password) < 6 {
-			renderRegisterPage(w, "Пароль должен содержать минимум 6 символов", "")
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Пароль должен содержать минимум 6 символов"})
 			return
 		}
 
@@ -484,11 +544,15 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 		user, err := authService.RegisterUser(r.Context(), req)
 		if err != nil {
-			renderRegisterPage(w, err.Error(), "")
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 			return
 		}
 
-		renderRegisterPage(w, "", fmt.Sprintf("Пользователь %s успешно зарегистрирован! Теперь вы можете войти.", user.Name))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(user)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
@@ -503,8 +567,10 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	// Удаляем cookie с токеном
 	authService.ClearAuthCookie(w)
 
-	// Перенаправляем на главную страницу
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	// JSON OK
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]any{"success": true})
 }
 
 func renderLoginPage(w http.ResponseWriter, errorMsg, successMsg string) {
@@ -549,8 +615,6 @@ func getPosts(w http.ResponseWriter, r *http.Request) {
 
 	// Получаем информацию о пользователе из контекста
 	user := auth.GetUserFromContext(r.Context())
-
-
 
 	data := struct {
 		Posts []*models.Post
@@ -711,11 +775,53 @@ func getPostIDFromURL(path string) (int, error) {
 	if len(parts) < 3 {
 		return 0, fmt.Errorf("invalid URL path")
 	}
-	
+
 	postID, err := strconv.Atoi(parts[2])
 	if err != nil {
 		return 0, fmt.Errorf("invalid post ID: %s", parts[2])
 	}
-	
+
 	return postID, nil
+}
+
+// authCheckHandler returns 200 if authorized
+func authCheckHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	user := auth.GetUserFromContext(r.Context())
+	w.Header().Set("Content-Type", "application/json")
+	if user == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "unauthorized"})
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]any{"ok": true})
+}
+
+// authUserHandler returns current user JSON
+func authUserHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed authUserHandler", http.StatusMethodNotAllowed)
+		return
+	}
+	claims := auth.GetUserFromContext(r.Context())
+	if claims == nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "unauthorized"})
+		return
+	}
+	user, err := userRepo.GetUserByID(r.Context(), claims.UserID)
+	if err != nil || user == nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "failed to get user"})
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(user)
 }

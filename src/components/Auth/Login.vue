@@ -40,6 +40,7 @@
 </template>
 
 <script>
+import useAuth from '@/composition/useAuth'
 export default {
   name: 'Login',
   data() {
@@ -52,33 +53,16 @@ export default {
   },
   methods: {
     async handleLogin() {
+      const { login } = useAuth()
       this.loading = true
       this.error = ''
-      
-      try {
-        const response = await fetch('/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({
-            email: this.email,
-            password: this.password
-          }),
-          credentials: 'include'
-        })
-
-        if (response.ok) {
-          this.$emit('login-success')
-        } else {
-          const data = await response.text()
-          this.error = data || this.$t('auth.loginError')
-        }
-      } catch (err) {
-        this.error = this.$t('auth.networkError')
-      } finally {
-        this.loading = false
+      const ok = await login(this.email, this.password)
+      if (ok) {
+        this.$emit('login-success')
+      } else {
+        this.error = this.$t('auth.loginError')
       }
+      this.loading = false
     }
   }
 }

@@ -63,6 +63,7 @@
 </template>
 
 <script>
+import useAuth from '@/composition/useAuth'
 export default {
   name: 'Register',
   data() {
@@ -86,34 +87,16 @@ export default {
         return
       }
 
+      const { register } = useAuth()
       this.loading = true
       this.error = ''
-      
-      try {
-        const response = await fetch('/auth/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({
-            name: this.name,
-            email: this.email,
-            password: this.password
-          }),
-          credentials: 'include'
-        })
-
-        if (response.ok) {
-          this.$emit('register-success')
-        } else {
-          const data = await response.text()
-          this.error = data || this.$t('auth.registerError')
-        }
-      } catch (err) {
-        this.error = this.$t('auth.networkError')
-      } finally {
-        this.loading = false
+      const ok = await register(this.name, this.email, this.password)
+      if (ok) {
+        this.$emit('register-success')
+      } else {
+        this.error = this.$t('auth.registerError')
       }
+      this.loading = false
     }
   }
 }

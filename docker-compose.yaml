@@ -12,7 +12,7 @@ services:
       - NODE_ENV=development
     volumes:
       - ./:/app
-      - /app/node_modules
+      - ./node_modules/app/node_modules
     working_dir: /app
     stdin_open: true
     tty: true
@@ -20,7 +20,7 @@ services:
       - api-backend
     networks:
       - mindmap-network
-    command: sh -c "npx vue-cli-service serve --port 8080 --host 0.0.0.0"
+    command: sh -c "npm i && npx vue-cli-service serve --port 8080 --host 0.0.0.0"
 
   api-backend:
     build:

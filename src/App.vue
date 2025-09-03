@@ -13,7 +13,7 @@
 <script>
 import AuthWrapper from './components/Auth/AuthWrapper.vue'
 import BaseLayout from './components/base/components/Layout/Layout.vue'
-import { checkAuth, getUserInfo, logout } from './utils/auth'
+import { me, getUserInfo, logout } from './utils/auth'
 
 export default {
   name: 'App',
@@ -32,15 +32,15 @@ export default {
   },
   methods: {
     async checkAuthentication() {
-      const authenticated = await checkAuth()
+      const authenticated = await me()
       if (authenticated) {
         this.isAuthenticated = true
-        this.userInfo = await getUserInfo()
+        this.userInfo = authenticated
       }
     },
     async handleAuthSuccess() {
       this.isAuthenticated = true
-      this.userInfo = await getUserInfo()
+      this.userInfo = await me()
     },
     async handleLogout() {
       const success = await logout()
