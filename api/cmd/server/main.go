@@ -70,7 +70,10 @@ func main() {
 	mindMapRepo := repository.NewMindMapRepository(dbpool)
 
 	// Сервисы
-	authService, err := auth.NewAuthService(userRepo)
+	authConfig := &auth.Config{
+		EnableRateLimit: true,
+	}
+	authService, err := auth.NewAuthService(userRepo, authConfig)
 	if err != nil {
 		log.Fatalf("auth service error: %v", err)
 	}

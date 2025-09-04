@@ -96,21 +96,43 @@ func GetUserFromContext(ctx context.Context) *Claims {
 }
 
 // SetAuthCookie устанавливает cookie с токеном авторизации
-func (s *AuthService) SetAuthCookie(w http.ResponseWriter, token string) {
+func (s *AuthService) SetAuthCookie(w http.ResponseWriter, tokenPair *TokenPair) {
+	// Set access token cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "auth_token",
-		Value:    token,
+		Value:    tokenPair.AccessToken,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   false, // Установите true для HTTPS
-		MaxAge:   86400, // 24 часа
+		MaxAge:   int(s.config.TokenExpiration.Seconds()),
+	})
+
+	// Set refresh token cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    tokenPair.RefreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false, // Установите true для HTTPS
+		MaxAge:   int(s.config.RefreshTokenExp.Seconds()),
 	})
 }
 
 // ClearAuthCookie удаляет cookie авторизации
 func (s *AuthService) ClearAuthCookie(w http.ResponseWriter) {
+	// Clear access token cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "auth_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		MaxAge:   -1,
+	})
+
+	// Clear refresh token cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,

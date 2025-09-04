@@ -26,6 +26,7 @@ func (h *AuthHandler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/auth/login", h.Login)
 	mux.HandleFunc("/auth/register", h.Register)
 	mux.HandleFunc("/auth/logout", h.Logout)
+	mux.HandleFunc("/auth/refresh", h.RefreshToken)
 	mux.HandleFunc("/auth/check", h.authService.AuthMiddleware(h.Check))
 	mux.HandleFunc("/auth/user", h.authService.AuthMiddleware(h.GetCurrentUser))
 }
@@ -55,14 +56,18 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req := &models.LoginRequest{Email: creds.Email, Password: creds.Password}
-	token, err := h.authService.LoginUser(r.Context(), req)
+	tokenPair, err := h.authService.LoginUser(r.Context(), req)
 	if err != nil {
 		h.respondError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	h.authService.SetAuthCookie(w, token)
-	h.respondJSON(w, http.StatusOK, map[string]any{"success": true})
+	h.authService.SetAuthCookie(w, tokenPair)
+	h.respondJSON(w, http.StatusOK, map[string]any{
+		"success":      true,
+		"access_token": tokenPair.AccessToken,
+		"expires_at":   tokenPair.ExpiresAt,
+	})
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -97,12 +102,51 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 	h.authService.ClearAuthCookie(w)
 	h.respondJSON(w, http.StatusOK, map[string]any{"success": true})
+}
+
+func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Get refresh token from cookie or header
+	var refreshToken string
+	
+	// Try cookie first
+	if cookie, err := r.Cookie("refresh_token"); err == nil && cookie.Value != "" {
+		refreshToken = cookie.Value
+	} else {
+		// Try Authorization header
+		authHeader := r.Header.Get("Authorization")
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			refreshToken = strings.TrimPrefix(authHeader, "Bearer ")
+		}
+	}
+
+	if refreshToken == "" {
+		h.respondError(w, http.StatusBadRequest, "refresh token is required")
+		return
+	}
+
+	tokenPair, err := h.authService.RefreshToken(refreshToken)
+	if err != nil {
+		h.respondError(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	h.authService.SetAuthCookie(w, tokenPair)
+	h.respondJSON(w, http.StatusOK, map[string]any{
+		"success":      true,
+		"access_token": tokenPair.AccessToken,
+		"expires_at":   tokenPair.ExpiresAt,
+	})
 }
 
 func (h *AuthHandler) Check(w http.ResponseWriter, r *http.Request) {

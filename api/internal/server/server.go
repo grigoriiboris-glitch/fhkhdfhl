@@ -6,7 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mymindmap/api/auth"
-	"github.com/mymindmap/api/handlers"
+	"github.com/mymindmap/api/internal/handlers"
 	"github.com/mymindmap/api/internal/config"
 	"github.com/mymindmap/api/repository"
 )
@@ -20,7 +20,12 @@ func New(cfg *config.Config, dbpool *pgxpool.Pool, log *log.Logger) *Server {
 	userRepo := repository.NewUserRepository(dbpool)
 	mindMapRepo := repository.NewMindMapRepository(dbpool)
 
-	authService, err := auth.NewAuthService(userRepo)
+	// Create auth config (for now with defaults, later from env)
+	authConfig := &auth.Config{
+		EnableRateLimit: true,
+	}
+	
+	authService, err := auth.NewAuthService(userRepo, authConfig)
 	if err != nil {
 		log.Fatal("unable to init auth service:", err)
 	}
@@ -28,21 +33,21 @@ func New(cfg *config.Config, dbpool *pgxpool.Pool, log *log.Logger) *Server {
 	mux := http.NewServeMux()
 
 	// auth routes
-	authHandler := handlers.NewAuthHandler(authService, userRepo)
+	authHandler := handlers.NewAuthHandler(authService, userRepo, log)
 	authHandler.RegisterRoutes(mux)
 
 	// post routes
-	postHandler := handlers.NewPostHandler(postRepo, authService)
+	postHandler := handlers.NewPostHandler(postRepo, authService, log)
 	postHandler.RegisterRoutes(mux)
 
 	// mindmap routes
-	mindMapHandler := handlers.NewMindMapHandler(mindMapRepo, authService)
+	mindMapHandler := handlers.NewMindMapHandler(mindMapRepo, authService, log)
 	mindMapHandler.RegisterRoutes(mux)
 
 	return &Server{
 		Server: http.Server{
 			Addr:    ":" + cfg.Port,
-			Handler: loggingMiddleware(mux, log),
+			Handler: mux,
 		},
 	}
 }
