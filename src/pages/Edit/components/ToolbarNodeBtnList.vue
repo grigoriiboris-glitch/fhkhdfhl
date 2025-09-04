@@ -1,279 +1,215 @@
 <template>
   <div class="toolbarNodeBtnList" :class="[dir, { isDark: isDark }]">
-    <template v-for="item in list">
-            <div
-        v-if="item === 'home'"
-        class="toolbarBtn"
-        @click="emit('execCommand', 'HOME')"
-      >
-        <span class="icon iconfont iconhoutui-shi"></span>
-        <span class="text">{{ $t('toolbar.undo') }}</span>
-      </div>
-      <div
-        v-if="item === 'back'"
-        class="toolbarBtn"
-        :class="{
-          disabled: readonly || backEnd
-        }"
-        @click="emit('execCommand', 'BACK')"
-      >
-        <span class="icon iconfont iconhoutui-shi"></span>
-        <span class="text">{{ $t('toolbar.undo') }}</span>
-      </div>
-      <div
-        v-if="item === 'forward'"
-        class="toolbarBtn"
-        :class="{
-          disabled: readonly || forwardEnd
-        }"
-        @click="emit('execCommand', 'FORWARD')"
-      >
-        <span class="icon iconfont iconqianjin1"></span>
-        <span class="text">{{ $t('toolbar.redo') }}</span>
-      </div>
-      <div
-        v-if="item === 'painter'"
-        class="toolbarBtn"
-        :class="{
-          disabled: activeNodes.length <= 0 || hasGeneralization,
-          active: isInPainter
-        }"
-        @click="emit('startPainter')"
-      >
-        <span class="icon iconfont iconjiedian"></span>
-        <span class="text">{{ $t('toolbar.painter') }}</span>
-      </div>
-      <div
-        v-if="item === 'siblingNode'"
-        class="toolbarBtn"
-        :class="{
-          disabled: activeNodes.length <= 0 || hasRoot || hasGeneralization
-        }"
-        @click="emit('execCommand', 'INSERT_NODE')"
-      >
-        <span class="icon iconfont iconjiedian"></span>
-        <span class="text">{{ $t('toolbar.insertSiblingNode') }}</span>
-      </div>
-      <div
-        v-if="item === 'childNode'"
-        class="toolbarBtn"
-        :class="{
-          disabled: activeNodes.length <= 0 || hasGeneralization
-        }"
-        @click="emit('execCommand', 'INSERT_CHILD_NODE')"
-      >
-        <span class="icon iconfont icontianjiazijiedian"></span>
-        <span class="text">{{ $t('toolbar.insertChildNode') }}</span>
-      </div>
-      <div
-        v-if="item === 'deleteNode'"
-        class="toolbarBtn"
-        :class="{
-          disabled: activeNodes.length <= 0
-        }"
-        @click="emit('execCommand', 'REMOVE_NODE')"
-      >
-        <span class="icon iconfont iconshanchu"></span>
-        <span class="text">{{ $t('toolbar.deleteNode') }}</span>
-      </div>
-      <div
-        v-if="item === 'image'"
-        class="toolbarBtn"
-        :class="{
-          disabled: activeNodes.length <= 0
-        }"
-        @click="emit('showNodeImage')"
-      >
-        <span class="icon iconfont iconimage"></span>
-        <span class="text">{{ $t('toolbar.image') }}</span>
-      </div>
-      <div
-        v-if="item === 'icon'"
-        class="toolbarBtn"
-        :class="{
-          disabled: activeNodes.length <= 0
-        }"
-        @click="showNodeIcon"
-      >
-        <span class="icon iconfont iconxiaolian"></span>
-        <span class="text">{{ $t('toolbar.icon') }}</span>
-      </div>
-      <div
-        v-if="item === 'link'"
-        class="toolbarBtn"
-        :class="{
-          disabled: activeNodes.length <= 0
-        }"
-        @click="emit('showNodeLink')"
-      >
-        <span class="icon iconfont iconchaolianjie"></span>
-        <span class="text">{{ $t('toolbar.link') }}</span>
-      </div>
-      <div
-        v-if="item === 'note'"
-        class="toolbarBtn"
-        :class="{
-          disabled: activeNodes.length <= 0
-        }"
-        @click="emit('showNodeNote')"
-      >
-        <span class="icon iconfont iconflow-Mark"></span>
-        <span class="text">{{ $t('toolbar.note') }}</span>
-      </div>
-      <div
-        v-if="item === 'tag'"
-        class="toolbarBtn"
-        :class="{
-          disabled: activeNodes.length <= 0
-        }"
-        @click="emit('showNodeTag')"
-      >
-        <span class="icon iconfont iconbiaoqian"></span>
-        <span class="text">{{ $t('toolbar.tag') }}</span>
-      </div>
-      <div
-        v-if="item === 'summary'"
-        class="toolbarBtn"
-        :class="{
-          disabled: activeNodes.length <= 0 || hasRoot || hasGeneralization
-        }"
-        @click="emit('execCommand', 'ADD_GENERALIZATION')"
-      >
-        <span class="icon iconfont icongaikuozonglan"></span>
-        <span class="text">{{ $t('toolbar.summary') }}</span>
-      </div>
-      <div
-        v-if="item === 'associativeLine'"
-        class="toolbarBtn"
-        :class="{
-          disabled: activeNodes.length <= 0 || hasGeneralization
-        }"
-        @click="emit('createAssociativeLine')"
-      >
-        <span class="icon iconfont iconlianjiexian"></span>
-        <span class="text">{{ $t('toolbar.associativeLine') }}</span>
-      </div>
-      <div
-        v-if="item === 'formula'"
-        class="toolbarBtn"
-        :class="{
-          disabled: activeNodes.length <= 0 || hasGeneralization
-        }"
-        @click="showFormula"
-      >
-        <span class="icon iconfont icongongshi"></span>
-        <span class="text">{{ $t('toolbar.formula') }}</span>
+    <div @click="$router.push({ name: 'Home' })" class="toolbarBtn">
+      <span class="icon iconfont iconhoutui-shi"></span>
+      <span class="text" >{{ $t('mindmap.myMaps')}}</span>
+    </div>
+    <template v-for="item in list" :key="item">
+      <div class="toolbarBtn" :class="{
+        disabled: 'disabled' in buttonConfig[item] ? buttonConfig[item].disabled() : false,
+        active: 'active' in buttonConfig[item] ? buttonConfig[item].active() : false
+      }" @click="emit('event' in buttonConfig ? buttonConfig.event : 'execCommand', buttonConfig[item].command)">
+        <span class="icon iconfont" :class="buttonConfig[item].icon"></span>
+        <span class="text">{{ $t(buttonConfig[item].text) }}</span>
       </div>
     </template>
   </div>
 </template>
 
-<script>
-import { mapState, mapMutations } from 'vuex'
+<script setup>
+
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useStore } from 'vuex'
 import bus from '@/utils/bus.js'
 
-export default {
-  props: {
-    dir: {
-      type: String,
-      default: 'h' // h（水平排列）、v（垂直排列）
-    },
-    list: {
-      type: Array,
-      default() {
-        return []
-      }
-    }
+const props = defineProps({
+  dir: {
+    type: String,
+    default: 'h' // h（水平排列）、v（垂直排列）
   },
-  data() {
-    return {
-      activeNodes: [],
-      backEnd: false,
-      forwardEnd: true,
-      readonly: false,
-      isFullDataFile: false,
-      timer: null,
-      isInPainter: false
-    }
+  list: {
+    type: Array,
+    default: () => []
+  }
+})
+
+const emit = defineEmits(['execCommand', 'startPainter', 'showNodeImage', 'showNodeLink', 'showNodeNote', 'showNodeTag', 'createAssociativeLine'])
+
+const store = useStore()
+
+// Реактивные переменные
+const activeNodes = ref([])
+const backEnd = ref(false)
+const forwardEnd = ref(true)
+const readonly = ref(false)
+const isFullDataFile = ref(false)
+const isInPainter = ref(false)
+
+// Computed свойства
+const isDark = computed(() => store.state.isDark)
+
+const hasRoot = computed(() => {
+  return activeNodes.value.findIndex(node => node.isRoot) !== -1
+})
+
+const hasGeneralization = computed(() => {
+  return activeNodes.value.findIndex(node => node.isGeneralization) !== -1
+})
+
+// Методы
+const onModeChange = (mode) => {
+  readonly.value = mode === 'readonly'
+}
+
+const onNodeActive = (args) => {
+  activeNodes.value = [...args[1]]
+}
+
+const onBackForward = (index, len) => {
+  backEnd.value = index <= 0
+  forwardEnd.value = index >= len - 1
+}
+
+const onPainterStart = () => {
+  isInPainter.value = true
+}
+
+const onPainterEnd = () => {
+  isInPainter.value = false
+}
+
+const showNodeIcon = () => {
+  bus.emit('close_node_icon_toolbar')
+  store.commit('setActiveSidebar', 'nodeIconSidebar')
+}
+
+const showFormula = () => {
+  store.commit('setActiveSidebar', 'formulaSidebar')
+}
+
+const emitBus = (...args) => bus.emit(...args)
+
+// Хуки жизненного цикла
+onMounted(() => {
+  bus.on('mode_change', onModeChange)
+  bus.on('node_active', onNodeActive)
+  bus.on('back_forward', onBackForward)
+  bus.on('painter_start', onPainterStart)
+  bus.on('painter_end', onPainterEnd)
+})
+
+onUnmounted(() => {
+  bus.off('mode_change', onModeChange)
+  bus.off('node_active', onNodeActive)
+  bus.off('back_forward', onBackForward)
+  bus.off('painter_start', onPainterStart)
+  bus.off('painter_end', onPainterEnd)
+})
+
+// Конфигурация кнопок
+const buttonConfig = {
+  back: {
+    icon: 'iconhoutui-shi',
+    text: 'toolbar.undo',
+    command: 'BACK',
+    disabled: () => readonly.value || backEnd.value
   },
-  computed: {
-    ...mapState(['isDark']),
-    hasRoot() {
-      return (
-        this.activeNodes.findIndex(node => {
-          return node.isRoot
-        }) !== -1
-      )
-    },
-    hasGeneralization() {
-      return (
-        this.activeNodes.findIndex(node => {
-          return node.isGeneralization
-        }) !== -1
-      )
-    }
+  forward: {
+    icon: 'iconqianjin1',
+    text: 'toolbar.redo',
+    command: 'FORWARD',
+    disabled: () => readonly.value || forwardEnd.value
   },
-  created() {
-    bus.on('mode_change', this.onModeChange)
-    bus.on('node_active', this.onNodeActive)
-    bus.on('back_forward', this.onBackForward)
-    bus.on('painter_start', this.onPainterStart)
-    bus.on('painter_end', this.onPainterEnd)
+  painter: {
+    icon: 'iconjiedian',
+    text: 'toolbar.painter',
+    event: 'startPainter',
+    disabled: () => activeNodes.value.length <= 0 || hasGeneralization.value,
+    active: () => isInPainter.value
   },
-  beforeDestroy() {
-    bus.off('mode_change', this.onModeChange)
-    bus.off('node_active', this.onNodeActive)
-    bus.off('back_forward', this.onBackForward)
-    bus.off('painter_start', this.onPainterStart)
-    bus.off('painter_end', this.onPainterEnd)
+  siblingNode: {
+    icon: 'iconjiedian',
+    text: 'toolbar.insertSiblingNode',
+    command: 'INSERT_NODE',
+    disabled: () => activeNodes.value.length <= 0 || hasRoot.value || hasGeneralization.value
   },
-  methods: {
-    ...mapMutations(['setActiveSidebar']),
-    // 监听模式切换
-    onModeChange(mode) {
-      this.readonly = mode === 'readonly'
-    },
-    // 监听节点激活
-    onNodeActive(args) {
-      this.activeNodes = [...args[1]]
-    },
-    // 监听前进后退
-    onBackForward(index, len) {
-      this.backEnd = index <= 0
-      this.forwardEnd = index >= len - 1
-    },
-    // 开始格式刷
-    onPainterStart() {
-      this.isInPainter = true
-    },
-    // 格式刷结束
-    onPainterEnd() {
-      this.isInPainter = false
-    },
-    // 显示节点图标侧边栏
-    showNodeIcon() {
-      bus.emit('close_node_icon_toolbar')
-      this.setActiveSidebar('nodeIconSidebar')
-    },
-    // 打开公式侧边栏
-    showFormula() {
-      this.setActiveSidebar('formulaSidebar')
-    },
-    emit: (...agrs) => bus.emit(...agrs)
+  childNode: {
+    icon: 'icontianjiazijiedian',
+    text: 'toolbar.insertChildNode',
+    command: 'INSERT_CHILD_NODE',
+    disabled: () => activeNodes.value.length <= 0 || hasGeneralization.value
+  },
+  deleteNode: {
+    icon: 'iconshanchu',
+    text: 'toolbar.deleteNode',
+    command: 'REMOVE_NODE',
+    disabled: () => activeNodes.value.length <= 0
+  },
+  image: {
+    icon: 'iconimage',
+    text: 'toolbar.image',
+    event: 'showNodeImage',
+    disabled: () => activeNodes.value.length <= 0
+  },
+  icon: {
+    icon: 'iconxiaolian',
+    text: 'toolbar.icon',
+    action: showNodeIcon,
+    disabled: () => activeNodes.value.length <= 0
+  },
+  link: {
+    icon: 'iconchaolianjie',
+    text: 'toolbar.link',
+    event: 'showNodeLink',
+    disabled: () => activeNodes.value.length <= 0
+  },
+  note: {
+    icon: 'iconflow-Mark',
+    text: 'toolbar.note',
+    event: 'showNodeNote',
+    disabled: () => activeNodes.value.length <= 0
+  },
+  tag: {
+    icon: 'iconbiaoqian',
+    text: 'toolbar.tag',
+    event: 'showNodeTag',
+    disabled: () => activeNodes.value.length <= 0
+  },
+  summary: {
+    icon: 'icongaikuozonglan',
+    text: 'toolbar.summary',
+    command: 'ADD_GENERALIZATION',
+    disabled: () => activeNodes.value.length <= 0 || hasRoot.value || hasGeneralization.value
+  },
+  associativeLine: {
+    icon: 'iconlianjiexian',
+    text: 'toolbar.associativeLine',
+    event: 'createAssociativeLine',
+    disabled: () => activeNodes.value.length <= 0 || hasGeneralization.value
+  },
+  formula: {
+    icon: 'icongongshi',
+    text: 'toolbar.formula',
+    action: showFormula,
+    disabled: () => activeNodes.value.length <= 0 || hasGeneralization.value
   }
 }
+
 </script>
 
 <style lang="less" scoped>
 .toolbarNodeBtnList {
   display: flex;
+
   &.isDark {
     .toolbarBtn {
       color: hsla(0, 0%, 100%, 0.9);
+
       .icon {
         background: transparent;
         border-color: transparent;
       }
+
       &:hover {
         &:not(.disabled) {
           .icon {
@@ -281,20 +217,24 @@ export default {
           }
         }
       }
+
       &.disabled {
         color: #54595f;
       }
     }
   }
+
   .toolbarBtn {
     display: flex;
     justify-content: center;
     flex-direction: column;
     cursor: pointer;
     margin-right: 20px;
+
     &:last-of-type {
       margin-right: 0;
     }
+
     &:hover {
       &:not(.disabled) {
         .icon {
@@ -302,16 +242,19 @@ export default {
         }
       }
     }
+
     &.active {
       .icon {
         background: #f5f5f5;
       }
     }
+
     &.disabled {
       color: #bcbcbc;
       cursor: not-allowed;
       pointer-events: none;
     }
+
     .icon {
       display: flex;
       height: 26px;
@@ -323,26 +266,32 @@ export default {
       text-align: center;
       padding: 0 5px;
     }
+
     .text {
       margin-top: 3px;
     }
   }
+
   &.v {
     display: block;
     width: 120px;
     flex-wrap: wrap;
+
     .toolbarBtn {
       flex-direction: row;
       justify-content: flex-start;
       margin-bottom: 10px;
       width: 100%;
       margin-right: 0;
+
       &:last-of-type {
         margin-bottom: 0;
       }
+
       .icon {
         margin-right: 10px;
       }
+
       .text {
         white-space: nowrap;
         overflow: hidden;

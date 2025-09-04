@@ -10,74 +10,74 @@ const routes = [
     path: '/',
     name: 'Home',
     component: MindMapList,
-     meta: {
+    meta: {
       title: 'Мои карты',
-      roles: [1, 2,3],
+      roles: [1, 2, 3],
     },
   },
   {
     path: '/index',
     name: 'Index',
     component: IndexPage,
-     meta: {
+    meta: {
       title: 'Index',
-      roles: [1, 2,3],
+      roles: [1, 2, 3],
     },
   },
-  { 
-    path: '/edit', 
-    name: 'Edit', 
+  {
+    path: '/edit',
+    name: 'Edit',
     component: () => import(`./pages/Edit/Index.vue`),
-     meta: {
+    meta: {
       title: 'Edit',
-      roles: [1, 2,3],
+      roles: [1, 2, 3],
     },
   },
-  { 
-    path: '/edit/:id', 
-    name: 'EditMap', 
+  {
+    path: '/edit/:id',
+    name: 'EditMap',
     component: () => import(`./pages/Edit/Index.vue`),
     props: true,
-     meta: {
+    meta: {
       title: 'EditMap',
-      roles: [1, 2,3],
+      roles: [1, 2, 3],
     },
   },
   {
     path: '/login',
     name: 'Login',
     component: Login,
-     meta: {
+    meta: {
       title: 'Login',
-      roles: [1, 2,3],
+      roles: [1, 2, 3],
     },
   },
   {
     path: '/profile',
     name: 'profile',
     component: Login,
-     meta: {
+    meta: {
       title: 'profile',
-      roles: [1, 2,3],
+      roles: [1, 2, 3],
     },
   },
   {
     path: '/tariffs',
     name: 'tariffs',
     component: Login,
-     meta: {
+    meta: {
       title: 'tariffs',
-      roles: [1, 2,3],
+      roles: [1, 2, 3],
     },
   },
-  
+
   {
     path: '/register',
     name: 'Register',
     component: Register,
     meta: {
       title: 'Register',
-      roles: [1, 2,3],
+      roles: [1, 2, 3],
     },
   }
 ]
