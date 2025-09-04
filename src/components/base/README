@@ -1,2 +1,23 @@
+# ADMIN PANEL (bootstrap": "^5.3.3", vue3, vuex)
+
 ## требуется
 bootstrap.min.css v4.4.1 подключить в public/index.html
+
+добавить store import baseStore from './components/base/store' в main.js
+
+в vue.config.js добавить и перенести в корень проекта папку scss
+css: {
+    requireModuleExtension: false,
+    loaderOptions: {
+      scss: {
+        additionalData: `@import '@/assets/scss/main.scss';`,
+      },
+    },
+  },
+
+в router.js добавить мета инфу
+
+meta: {
+      title: 'Мои карты',
+      roles: [1, 2,3],
+},

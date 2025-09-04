@@ -1,0 +1,114 @@
+//@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+//$primary: #6d8bd0;
+$gray: #808080;
+
+$black: #333333;
+$white: #ffffff;
+$soft-gray: #e8e8e8;
+$gray_common: #808080;
+$green: #6dcd9a;
+$primary:#007bff;
+$danger: #fc8787;
+h1,
+h2 {
+  font-weight: 700;
+}
+p,a,button,span {
+  font-size: 18px;
+}
+b,strong{
+  font-weight: 700;
+}
+body{
+  font-family: Ubuntu;
+}
+
+.font-color-{
+  &black{
+    color: $black;
+  }
+  &white{
+    color: white;
+  }
+}
+
+.el-dialog__header {
+  //background: rgba(229, 229, 229, 0.581);
+  //padding: 10px;
+  // margin-right: unset;
+  //border-radius: 10px;
+}
+.el-dialog {
+  border-radius: 10px;
+}
+
+//@import './style.scss';
+@import './helpers.scss';
+/*
+@import './helpers.scss';
+@import './loader.scss';
+*/
+//@import './sax.scss';
+//@import './style.scss';
+
+.wrap-for-items {
+  padding: 4px;
+}
+
+.is-error {
+  border: 1px solid rgb(255, 85, 85);
+}
+.is-error-wrap {
+  box-shadow: 0 0 6px #fc8787;
+}
+.error-block-text{
+  font-family: Ubuntu;
+  // border-radius: 10px;
+  // border: 1px solid rgb(255, 85, 85);
+  // background-color:#ffd8d8 ;
+  color:black;
+}
+
+tytry * {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.w-input__input-wrap--box {
+  height: 40px;
+}
+
+.border-red {
+  border: 1px solid rgb(255, 85, 85) !important;
+  border-radius: 5px;
+}
+
+.el-form-item {
+  display: flex;
+  margin-bottom: unset;
+  padding: 3px;
+}
+
+.data-table{
+  min-height:70vh;
+}
+
+// .el-button{
+//   margin-right: 12px;
+// }
+
+.el-button+.el-button {
+  margin-left: unset;
+}
+
+
+//new
+.bx-shadow {
+	box-shadow: 0 0 30px 0 rgba(200, 200, 200, 0.2);
+}
+
+html {
+	position: relative;
+	min-height: 100%;
+}

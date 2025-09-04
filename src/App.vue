@@ -1,20 +1,20 @@
 <template>
-  <div id="app">
-    <AuthWrapper 
-      v-if="!User" 
-      @auth-success="handleAuthSuccess"
-    />
-    <div v-else class="app-container">
-      <BaseLayout v-if="$route.name !== 'EditMap'" />
-      <router-view v-else/>
+  <div id="app"> 
+    <AuthWrapper v-if="!User" @auth-success="handleAuthSuccess" />
+    <router-view v-else-if="User && routes.includes($route.name)" />
+    <div v-else-if="!routes.includes($route.name)" class="app-container">
+      <BaseLayout/>
     </div>
+
   </div>
+
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import AuthWrapper from './components/Auth/AuthWrapper.vue'
 import BaseLayout from './components/base/components/Layout/Layout.vue'
+
 import useAuth from '@/composition/useAuth';
 
 const { me, logout, User } = useAuth();
@@ -29,6 +29,8 @@ const checkAuthentication = async () => {
     userInfo.value = authenticated
   }
 }
+
+const routes = ref(['EditMap', 'Edit']);
 
 const handleAuthSuccess = async () => {
   isAuthenticated.value = true
@@ -48,7 +50,7 @@ onMounted(async () => {
 })
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

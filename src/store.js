@@ -1,6 +1,8 @@
 import { createStore } from 'vuex'
 import exampleData from 'simple-mind-map/example/exampleData'
 import { storeLocalConfig } from '@/api'
+import layout from './components/base/store/layout';
+import dashboard from './components/base/store/dashboard';
 
 const store = createStore({
   state: {
@@ -89,7 +91,11 @@ const store = createStore({
         console.log(error)
       }
     }
-  }
+  },
+  modules: {
+      layout,
+      dashboard,
+    },
 })
 
 export default store

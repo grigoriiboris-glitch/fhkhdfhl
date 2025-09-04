@@ -11,7 +11,7 @@ const routes = [
     name: 'Home',
     component: MindMapList,
      meta: {
-      title: 'Home',
+      title: 'Мои карты',
       roles: [1, 2,3],
     },
   },

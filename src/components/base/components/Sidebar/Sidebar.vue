@@ -87,12 +87,12 @@ const { User } = useAuth();
 
 
 const leftbarItems = ref([
-  // {
-  //   title: t('Knowledge base'),
-  //   icon: 'typcn-book',
-  //   to: 'help',
-  //   roles: [1, 2, 3]
-  // },
+  {
+    title: t('mindmap.myMaps'),
+    icon: 'typcn-book',
+    to: 'Home',
+    roles: [1, 2, 3]
+  },
 ]);
 const leftbarItemsBot = ref([
 

@@ -1,6 +1,14 @@
 <template>
   <div class="toolbarNodeBtnList" :class="[dir, { isDark: isDark }]">
     <template v-for="item in list">
+            <div
+        v-if="item === 'home'"
+        class="toolbarBtn"
+        @click="emit('execCommand', 'HOME')"
+      >
+        <span class="icon iconfont iconhoutui-shi"></span>
+        <span class="text">{{ $t('toolbar.undo') }}</span>
+      </div>
       <div
         v-if="item === 'back'"
         class="toolbarBtn"

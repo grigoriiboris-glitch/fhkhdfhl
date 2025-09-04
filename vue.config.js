@@ -31,6 +31,14 @@ module.exports = {
       }
     }
   },
+  // css: {
+  //   requireModuleExtension: false,
+  //   loaderOptions: {
+  //     scss: {
+  //       //additionalData: `@import '@/assets/scss/main.scss';`,
+  //     },
+  //   },
+  // },
   lintOnSave: false,
   publicPath: isDev ? '' : '/hyy-vue3-mindmap/',
   //assetsDir: 'static'

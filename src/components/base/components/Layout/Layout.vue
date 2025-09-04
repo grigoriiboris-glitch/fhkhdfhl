@@ -1,5 +1,6 @@
 <template>
   <div
+    id="base"
     :class="[{ root: true, sidebarClose, sidebarStatic }, 'sing-dashboard', 'sidebar-' + sidebarColorName, 'sidebar-' + sidebarType, 'navbar-' + navbarColorName]">
     <Sidebar />
     <div class="wrap">
@@ -69,7 +70,7 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 @import '../../styles/app.scss';
 
 .contentbar {

@@ -14,10 +14,10 @@
         <i class="fa fa-circle text-primary"></i>
       </router-link>
 
-      <div class="collapse navbar-collapse ml-4">
+      <div class="collapse navbar-collapse ml-4 justify-content-between">
         <ul class="navbar-nav me-auto">
           <li class="nav-item">
-            <!-- <breadcrumbs></breadcrumbs> -->
+            <bread-crumbs></bread-crumbs>
           </li>
         </ul>
         <ul v-if="1 == 2" class="nav">
@@ -337,7 +337,7 @@ onMounted(() => {
   .notificationsMenu {
     .dropdown-menu {
       left: auto !important;
-      right: 0 !important;
+      right: 0 !important; 
       top: $navbar-height !important;
     }
   }
@@ -347,6 +347,9 @@ onMounted(() => {
   }
 
   .settingsDropdown {
+.dropdown-menu {
+  top:55px;
+}
     .dropdown-item:focus {
       outline: none;
     }

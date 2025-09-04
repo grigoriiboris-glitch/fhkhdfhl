@@ -1,7 +1,6 @@
 <template>
   <div class="mindmap-list">
     <div class="list-header">
-      <h2>{{ $t('mindmap.myMaps') }}</h2>
       <button @click="createNewMap" class="create-btn">
         {{ $t('mindmap.createNew') }}
       </button>
@@ -130,9 +129,7 @@ export default {
 
 <style scoped>
 .mindmap-list {
-  padding: 2rem;
   max-width: 1200px;
-  margin: 0 auto;
 }
 
 .list-header {
