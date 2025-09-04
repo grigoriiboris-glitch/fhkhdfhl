@@ -351,3 +351,43 @@
 2025/09/04 11:10:20.546713 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:34668, content-type= body=
 2025/09/04 11:11:46.999695 REQUEST: method=GET, url=/api/mindmaps, remote=172.21.0.3:36028, content-type= body=
 2025/09/04 11:12:20.031009 REQUEST: method=GET, url=/api/mindmaps, remote=172.21.0.3:36028, content-type= body=
+2025/09/04 12:46:00.837500 REQUEST: method=GET, url=/api/mindmaps, remote=172.21.0.3:37110, content-type= body=
+2025/09/04 12:46:00.837950 http: panic serving 172.21.0.3:37110: runtime error: invalid memory address or nil pointer dereference
+goroutine 33 [running]:
+net/http.(*conn).serve.func1()
+	/usr/local/go/src/net/http/server.go:1947 +0xbe
+panic({0xa5bcc0?, 0x10c1d80?})
+	/usr/local/go/src/runtime/panic.go:792 +0x132
+main.main.func6({0xc150c8, 0xc00027a000}, 0xc00026a000)
+	/app/main.go:253 +0x199
+net/http.HandlerFunc.ServeHTTP(0xc00022e040?, {0xc150c8?, 0xc00027a000?}, 0x7?)
+	/usr/local/go/src/net/http/server.go:2294 +0x29
+github.com/mymindmap/api/auth.(*AuthService).AuthMiddleware-fm.(*AuthService).AuthMiddleware.func1({0xc150c8, 0xc00027a000}, 0xc00026a000)
+	/app/auth/middleware.go:44 +0x116
+net/http.HandlerFunc.ServeHTTP(0xc00022c180?, {0xc150c8?, 0xc00027a000?}, 0xb49f40?)
+	/usr/local/go/src/net/http/server.go:2294 +0x29
+net/http.(*ServeMux).ServeHTTP(0xb49f40?, {0xc150c8, 0xc00027a000}, 0xc00026a000)
+	/usr/local/go/src/net/http/server.go:2822 +0x1c4
+main.main.loggingMiddleware.func12({0xc150c8, 0xc00027a000}, 0xc00026a000)
+	/app/main.go:442 +0x250
+net/http.HandlerFunc.ServeHTTP(0x470979?, {0xc150c8?, 0xc00027a000?}, 0xc0000c9b70?)
+	/usr/local/go/src/net/http/server.go:2294 +0x29
+net/http.serverHandler.ServeHTTP({0xc00020aff0?}, {0xc150c8?, 0xc00027a000?}, 0x6?)
+	/usr/local/go/src/net/http/server.go:3301 +0x8e
+net/http.(*conn).serve(0xc000262090, {0xc16260, 0xc00020af00})
+	/usr/local/go/src/net/http/server.go:2102 +0x625
+created by net/http.(*Server).Serve in goroutine 1
+	/usr/local/go/src/net/http/server.go:3454 +0x485
+2025/09/04 12:46:02.504938 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:37116, content-type= body=
+2025/09/04 12:46:02.506599 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:37116, content-type= body=
+2025/09/04 12:46:02.543880 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:37116, content-type= body=
+2025/09/04 12:46:02.550302 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:37116, content-type= body=
+2025/09/04 12:46:02.558343 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:37116, content-type= body=
+2025/09/04 12:46:02.560995 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:37116, content-type= body=
+2025/09/04 12:46:02.563299 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:37116, content-type= body=
+2025/09/04 12:46:02.565508 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:37116, content-type= body=
+2025/09/04 12:46:02.567621 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:37116, content-type= body=
+2025/09/04 12:46:02.569705 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:37116, content-type= body=
+2025/09/04 12:46:02.571922 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:37116, content-type= body=
+2025/09/04 12:46:02.574383 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:37116, content-type= body=
+2025/09/04 12:46:02.576520 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:37116, content-type= body=

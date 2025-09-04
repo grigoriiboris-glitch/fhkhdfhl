@@ -510,17 +510,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("registerHandler: method=%s, url=%s", r.Method, r.URL.String())
-	if r.Method == "POST" {
-		if err := r.ParseForm(); err == nil {
-			log.Printf("registerHandler POST body: name=%s, email=%s, password=%s, confirm_password=%s",
-				r.FormValue("name"), r.FormValue("email"), r.FormValue("password"), r.FormValue("confirm_password"))
-		} else {
-			log.Printf("registerHandler POST body parse error: %v", err)
-		}
-	}
 	switch r.Method {
-	case "GET":
-		w.WriteHeader(http.StatusNoContent)
+	// case "GET":
+	// 	w.WriteHeader(http.StatusNoContent)
 	case "POST":
 		var email, name, password string
 		var err error
