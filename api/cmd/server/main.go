@@ -12,7 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/mymindmap/api/auth"
-	"github.com/mymindmap/api/handlers"
+	"github.com/mymindmap/api/internal/handlers"
 	"github.com/mymindmap/api/repository"
 )
 
@@ -76,7 +76,7 @@ func main() {
 	}
 
 	// Handlers
-	authHandler := handlers.NewAuthHandler(userRepo, authService, log.Default())
+	authHandler := handlers.NewAuthHandler(authService, userRepo, log.Default())
 	postHandler := handlers.NewPostHandler(postRepo, authService, log.Default())
 	mindMapHandler := handlers.NewMindMapHandler(mindMapRepo, authService, log.Default())
 

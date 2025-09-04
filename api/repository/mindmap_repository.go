@@ -193,3 +193,32 @@ func (r *MindMapRepository) DeleteByAdmin(ctx context.Context, id int) error {
 
 	return nil
 } 
+
+// Compatibility methods expected by internal/handlers/mindmaps.go
+// They delegate to the existing repository methods defined above.
+
+// GetMindMapsByUser returns mindmaps for a given user.
+func (r *MindMapRepository) GetMindMapsByUser(ctx context.Context, userID int) ([]*models.MindMap, error) {
+    return r.GetByUserID(ctx, userID)
+}
+
+// GetMindMapByID returns a single mindmap by ID.
+func (r *MindMapRepository) GetMindMapByID(ctx context.Context, id int) (*models.MindMap, error) {
+    return r.GetByID(ctx, id)
+}
+
+// CreateMindMap creates a new mindmap.
+func (r *MindMapRepository) CreateMindMap(ctx context.Context, m *models.MindMap) error {
+    return r.Create(ctx, m)
+}
+
+// UpdateMindMap updates an existing mindmap.
+func (r *MindMapRepository) UpdateMindMap(ctx context.Context, m *models.MindMap) error {
+    return r.Update(ctx, m)
+}
+
+// DeleteMindMap deletes a mindmap by ID (and optionally checks user elsewhere).
+func (r *MindMapRepository) DeleteMindMap(ctx context.Context, id int) error {
+    // For generic deletion without user constraint, reuse admin delete
+    return r.DeleteByAdmin(ctx, id)
+}

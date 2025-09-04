@@ -391,3 +391,8 @@ created by net/http.(*Server).Serve in goroutine 1
 2025/09/04 12:46:02.571922 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:37116, content-type= body=
 2025/09/04 12:46:02.574383 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:37116, content-type= body=
 2025/09/04 12:46:02.576520 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:37116, content-type= body=
+2025/09/04 13:00:07.912001 REQUEST: method=POST, url=/auth/login, remote=172.21.0.3:55274, content-type=application/json body={"email":"oleg3@gmail.com","password":"oleg3@gmail.com"}
+2025/09/04 13:00:07.912196 loginHandler: method=POST, url=/auth/login
+2025/09/04 13:00:07.961086 REQUEST: method=GET, url=/auth/user, remote=172.21.0.3:55274, content-type= body=
+2025/09/04 13:00:07.985713 REQUEST: method=GET, url=/api/mindmaps, remote=172.21.0.3:55282, content-type= body=
+2025/09/04 13:00:17.206992 REQUEST: method=GET, url=/api/mindmaps, remote=172.21.0.3:55282, content-type= body=
