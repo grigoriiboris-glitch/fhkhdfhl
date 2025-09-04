@@ -75,18 +75,20 @@ func (r *MindMapRepository) GetByUserID(ctx context.Context, userID int) ([]*mod
 		SELECT id, title, data, user_id, is_public, created_at, updated_at
 		FROM mindmaps
 		WHERE user_id = $1
-		ORDER BY updated_at DESC`
+		ORDER BY updated_at DESC
+	`
 
 	rows, err := r.db.Query(ctx, query, userID)
 	if err != nil {
-		return nil, fmt.Errorf("error getting mindmaps by user: %w", err)
+		return nil, fmt.Errorf("get mindmaps by user: %w", err)
 	}
 	defer rows.Close()
 
 	var mindMaps []*models.MindMap
+
 	for rows.Next() {
-		mindMap := &models.MindMap{}
-		err := rows.Scan(
+		mindMap := new(models.MindMap) // то же самое, что &models.MindMap{}
+		if err := rows.Scan(
 			&mindMap.ID,
 			&mindMap.Title,
 			&mindMap.Data,
@@ -94,15 +96,20 @@ func (r *MindMapRepository) GetByUserID(ctx context.Context, userID int) ([]*mod
 			&mindMap.IsPublic,
 			&mindMap.CreatedAt,
 			&mindMap.UpdatedAt,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("error scanning mindmap: %w", err)
+		); err != nil {
+			return nil, fmt.Errorf("scan mindmap: %w", err)
 		}
 		mindMaps = append(mindMaps, mindMap)
 	}
 
+	// очень важно: проверяем ошибки после итерации
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
+	}
+
 	return mindMaps, nil
 }
+
 
 func (r *MindMapRepository) GetPublic(ctx context.Context) ([]*models.MindMap, error) {
 	query := `
