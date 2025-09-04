@@ -11,12 +11,18 @@ import (
 	"time"
 
 	"github.com/mymindmap/api/models"
-	"github.com/mymindmap/api/repository"
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
+
+// UserRepositoryInterface defines the interface for user repository operations
+type UserRepositoryInterface interface {
+	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
+	GetUserByID(ctx context.Context, id int) (*models.User, error)
+	CreateUser(ctx context.Context, user *models.User) error
+}
 
 // Constants for roles, objects, and actions
 const (
@@ -71,7 +77,7 @@ type Config struct {
 }
 
 type AuthService struct {
-	userRepo    *repository.UserRepository
+	userRepo    UserRepositoryInterface
 	enforcer    *casbin.Enforcer
 	config      *Config
 	logger      *slog.Logger
@@ -92,7 +98,7 @@ type TokenPair struct {
 	ExpiresAt    int64  `json:"expires_at"`
 }
 
-func NewAuthService(userRepo *repository.UserRepository, config *Config) (*AuthService, error) {
+func NewAuthService(userRepo UserRepositoryInterface, config *Config) (*AuthService, error) {
 	if config == nil {
 		return nil, errors.New("config is required")
 	}
