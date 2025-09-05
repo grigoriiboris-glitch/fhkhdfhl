@@ -3,3 +3,4 @@ node_modules/
 #api/
 # dist/
 npm-debug.log
+api/log
