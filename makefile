@@ -25,3 +25,5 @@ td:
 
 # Значение по умолчанию
 DIR ?= auth
+
+#mkdir -p cmd/server internal/{auth,config,db,http/{requests/{auth,mindmap,post,user},middleware,routes,handlers},services,server} models repository/{migrations} storage/{uploads,cache,logs} pkg/{logger,utils} scripts
