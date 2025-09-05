@@ -14,10 +14,8 @@ internal/
     config.go
   db/                      # подключение к БД
     db.go
-	migrations/
-	    000001_create_posts_table.up.sql
   http/					   # HTTP
-    requests/
+    requests/ #входящие данные и их валидация
 		auth/
 		mindmap/
 		post/
@@ -43,6 +41,8 @@ models/                    # доменные сущности (структур
   user.go
 
 repository/                # доступ к БД
+  migrations/
+	000001_create_posts_table.up.sql
     ...
   mindmap_repository.go
   post_repository.go
@@ -60,8 +60,7 @@ pkg/                       # (опционально) общие утилиты,
 scripts/                   # вспомогательные скрипты (миграции, сидинг)
   migrate.sh
 
-docs/                      # документация (swagger, схемы)
-  openapi.yaml
+docs/                     
 
 tests/                     # интеграционные / e2e тесты
   auth_integration_test.go

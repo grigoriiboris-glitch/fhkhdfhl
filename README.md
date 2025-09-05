@@ -245,7 +245,3 @@ docker-compose logs mindmap-frontend
 docker-compose build mindmap-frontend
 docker-compose up -d mindmap-frontend
 ```
-
-## Лицензия
-
-MIT License
