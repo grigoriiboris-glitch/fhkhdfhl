@@ -6,5 +6,7 @@ api/logs/*
 api/main
 api/server
 api/tmp
+/.idea
+.idea
 # dist/
 npm-debug.log
