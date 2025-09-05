@@ -1,6 +1,10 @@
 .DS_Store
 node_modules/
 #api/
-api/logs
+api/logs/*
+**/logs/
+api/main
+api/server
+api/tmp
 # dist/
 npm-debug.log
