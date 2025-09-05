@@ -15,3 +15,13 @@ m:
 	docker-compose up migrate
 c:
 	docker-compose up caddy
+
+test:
+	docker exec -it mindmap-api go test ./...
+
+td:
+	docker exec -it -w /app/$(DIR) mindmap-api go test -cover
+##	docker exec -it -w /app/auth mindmap-api go test -cover
+
+# Значение по умолчанию
+DIR ?= auth

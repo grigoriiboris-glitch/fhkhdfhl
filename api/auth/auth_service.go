@@ -17,40 +17,42 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// UserRepositoryInterface defines the interface for user repository operations
+// UserRepositoryInterface определяет интерфейс для операций с пользователями в БД
+// Это абстракция, позволяющая работать с разными базами данных
 type UserRepositoryInterface interface {
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
 	GetUserByID(ctx context.Context, id int) (*models.User, error)
 	CreateUser(ctx context.Context, user *models.User) error
 }
 
-// Constants for roles, objects, and actions
+// Константы для ролей, объектов и действий в системе прав доступа
 const (
-	// Roles
-	RoleUser   = "user"
-	RoleAdmin  = "admin"
-	RoleAuthor = "author"
+	// Роли пользователей
+	RoleUser   = "user"    // Обычный пользователь
+	RoleAdmin  = "admin"   // Администратор (полные права)
+	RoleAuthor = "author"  // Автор контента
 
-	// Objects
-	ObjectPost = "post"
-	ObjectUser = "user"
+	// Объекты для контроля доступа
+	ObjectPost = "post"    // Посты/записи
+	ObjectUser = "user"    // Пользователи
 
-	// Actions
-	ActionRead   = "read"
-	ActionWrite  = "write"
-	ActionDelete = "delete"
-	ActionManage = "manage"
+	// Действия над объектами
+	ActionRead   = "read"    // Просмотр
+	ActionWrite  = "write"   // Создание/редактирование
+	ActionDelete = "delete"  // Удаление
+	ActionManage = "manage"  // Полное управление
 
-	// Token settings
-	TokenExpirationTime = 24 * time.Hour
-	RefreshTokenExpTime = 7 * 24 * time.Hour
+	// Настройки токенов
+	TokenExpirationTime = 24 * time.Hour      // Время жизни access токена
+	RefreshTokenExpTime = 7 * 24 * time.Hour  // Время жизни refresh токена
 
-	// Password constraints
-	MinPasswordLength = 8
-	MaxPasswordLength = 128
-	BcryptCost        = 12
+	// Ограничения паролей
+	MinPasswordLength = 8     // Минимальная длина пароля
+	MaxPasswordLength = 128   // Максимальная длина пароля
+	BcryptCost        = 12    // Сложность хеширования (12 - хороший баланс безопасности и производительности)
 )
 
+// Ошибки аутентификации и авторизации
 var (
 	ErrUserExists         = errors.New("user with this email already exists")
 	ErrInvalidCredentials = errors.New("invalid email or password")
@@ -62,48 +64,57 @@ var (
 	ErrTooManyAttempts    = errors.New("too many login attempts, please try again later")
 )
 
-// Config holds configuration for the auth service
+// Config содержит конфигурацию сервиса аутентификации
+// Все настройки можно передать из внешнего config файла или переменных окружения
 type Config struct {
-	JWTSecret        []byte
-	SessionKey       []byte
-	TokenExpiration  time.Duration
-	RefreshTokenExp  time.Duration
-	BcryptCost       int
-	Logger           *slog.Logger
-	EnableRateLimit  bool
-	MaxLoginAttempts int
-	RateLimitWindow  time.Duration
-	RateLimitBlock   time.Duration
+	JWTSecret        []byte        // Секрет для подписи JWT токенов
+	SessionKey       []byte        // Ключ для сессий (если используются)
+	TokenExpiration  time.Duration // Время жизни access токена
+	RefreshTokenExp  time.Duration // Время жизни refresh токена
+	BcryptCost       int           // Сложность bcrypt хеширования
+	Logger           *slog.Logger  // Логгер для записи событий
+	EnableRateLimit  bool          // Включить лимитирование запросов
+	MaxLoginAttempts int           // Максимум попыток входа
+	RateLimitWindow  time.Duration // Окно времени для лимита
+	RateLimitBlock   time.Duration // Время блокировки после превышения лимита
 }
 
+// AuthService - основной сервис аутентификации и авторизации
+// Содержит бизнес-логику работы с пользователями, токенами и правами доступа
 type AuthService struct {
-	userRepo    UserRepositoryInterface
-	enforcer    *casbin.Enforcer
-	config      *Config
-	logger      *slog.Logger
-	rateLimiter *RateLimiter
+	userRepo    UserRepositoryInterface // Репозиторий для работы с БД
+	enforcer    *casbin.Enforcer        // Casbin enforcer для контроля доступа
+	config      *Config                 // Конфигурация сервиса
+	logger      *slog.Logger            // Логгер
+	rateLimiter *RateLimiter            // Лимитер запросов (опционально)
 }
 
+// Claims - кастомные claims для JWT токена
+// Содержат информацию о пользователе и стандартные JWT claims
 type Claims struct {
-	UserID int    `json:"user_id"`
-	Name   string `json:"name"`
-	Email  string `json:"email"`
-	Role   string `json:"role"`
-	jwt.RegisteredClaims
+	UserID int    `json:"user_id"`  // ID пользователя в БД
+	Name   string `json:"name"`     // Имя пользователя
+	Email  string `json:"email"`    // Email пользователя
+	Role   string `json:"role"`     // Роль пользователя в системе
+	jwt.RegisteredClaims            // Стандартные JWT claims (exp, iat, nbf, iss, etc.)
 }
 
+// TokenPair - пара access и refresh токенов
+// Используется для аутентификации и обновления сессии
 type TokenPair struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresAt    int64  `json:"expires_at"`
+	AccessToken  string `json:"access_token"`  // Короткоживущий токен для доступа к API
+	RefreshToken string `json:"refresh_token"` // Долгоживущий токен для обновления access токена
+	ExpiresAt    int64  `json:"expires_at"`    // Unix timestamp истечения access токена
 }
 
+// NewAuthService создает новый экземпляр сервиса аутентификации
+// Инициализирует все зависимости: Casbin, лимитер, настройки
 func NewAuthService(userRepo UserRepositoryInterface, config *Config) (*AuthService, error) {
 	if config == nil {
 		return nil, errors.New("config is required")
 	}
 
-	// Set defaults if not provided
+	// Установка значений по умолчанию, если не предоставлены
 	if config.TokenExpiration == 0 {
 		config.TokenExpiration = TokenExpirationTime
 	}
@@ -123,7 +134,7 @@ func NewAuthService(userRepo UserRepositoryInterface, config *Config) (*AuthServ
 		config.RateLimitBlock = 15 * time.Minute
 	}
 
-	// Generate secrets if not provided (for development only)
+	// Генерация секретов, если не предоставлены (ТОЛЬКО для разработки!)
 	if len(config.JWTSecret) == 0 {
 		config.JWTSecret = make([]byte, 32)
 		if _, err := rand.Read(config.JWTSecret); err != nil {
@@ -144,13 +155,13 @@ func NewAuthService(userRepo UserRepositoryInterface, config *Config) (*AuthServ
 		}
 	}
 
-	// Create Casbin model
+	// Создание Casbin модели для контроля доступа
 	m, err := createCasbinModel()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create casbin model: %w", err)
 	}
 
-	// Create enforcer
+	// Создание Casbin enforcer - движка контроля доступа
 	enforcer, err := casbin.NewEnforcer(m)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create casbin enforcer: %w", err)
@@ -163,7 +174,7 @@ func NewAuthService(userRepo UserRepositoryInterface, config *Config) (*AuthServ
 		logger:   config.Logger,
 	}
 
-	// Initialize rate limiter if enabled
+	// Инициализация лимитера запросов, если включен
 	if config.EnableRateLimit {
 		service.rateLimiter = NewRateLimiter(
 			config.MaxLoginAttempts,
@@ -172,7 +183,7 @@ func NewAuthService(userRepo UserRepositoryInterface, config *Config) (*AuthServ
 		)
 	}
 
-	// Initialize policies
+	// Инициализация политик доступа
 	if err := service.initializePolicies(); err != nil {
 		return nil, fmt.Errorf("failed to initialize policies: %w", err)
 	}
@@ -180,42 +191,47 @@ func NewAuthService(userRepo UserRepositoryInterface, config *Config) (*AuthServ
 	return service, nil
 }
 
+// createCasbinModel создает модель Casbin для контроля доступа
+// Используется RBAC (Role-Based Access Control) с субъект-объект-действие
 func createCasbinModel() (model.Model, error) {
 	return model.NewModelFromString(`
 [request_definition]
-r = sub, obj, act
+r = sub, obj, act  # Запрос: кто (роль), что (объект), какое действие
 
 [policy_definition]
-p = sub, obj, act
+p = sub, obj, act  # Политика: для какой роли, на какой объект, какое действие разрешено
 
 [role_definition]
-g = _, _
+g = _, _           # Назначение ролей пользователям (user -> role)
 
 [policy_effect]
-e = some(where (p.eft == allow))
+e = some(where (p.eft == allow))  # Эффект: разрешить если хотя бы одна политика позволяет
 
 [matchers]
-m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
+m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act  # Совпадение: пользователь имеет роль И объект совпадает И действие совпадает
 `)
 }
 
+// initializePolicies инициализирует базовые политики доступа
+// Определяет какие роли могут выполнять какие действия над какими объектами
 func (s *AuthService) initializePolicies() error {
 	policies := [][]string{
-		// User permissions
-		{RoleUser, ObjectPost, ActionRead},
-		{RoleUser, ObjectPost, ActionWrite},
+		// Права обычного пользователя
+		{RoleUser, ObjectPost, ActionRead},   // user может читать посты
+		{RoleUser, ObjectPost, ActionWrite},  // user может писать посты
 		
-		// Author permissions
-		{RoleAuthor, ObjectPost, ActionRead},
-		{RoleAuthor, ObjectPost, ActionWrite},
+		// Права автора (наследует права user + дополнительные)
+		{RoleAuthor, ObjectPost, ActionRead},  // author может читать посты
+		{RoleAuthor, ObjectPost, ActionWrite}, // author может писать посты
 		
-		// Admin permissions
-		{RoleAdmin, ObjectPost, ActionRead},
-		{RoleAdmin, ObjectPost, ActionWrite},
-		{RoleAdmin, ObjectPost, ActionDelete},
-		{RoleAdmin, ObjectUser, ActionManage},
+		// Права администратора (полные права)
+		{RoleAdmin, ObjectPost, ActionRead},    // admin может читать посты
+		{RoleAdmin, ObjectPost, ActionWrite},   // admin может писать посты
+		{RoleAdmin, ObjectPost, ActionDelete},  // admin может удалять посты
+		{RoleAdmin, ObjectUser, ActionManage},  // admin может управлять пользователями
 	}
 
+	// Добавление всех политик в enforcer
 	for _, policy := range policies {
 		if _, err := s.enforcer.AddPolicy(policy[0], policy[1], policy[2]); err != nil {
 			return fmt.Errorf("failed to add policy %v: %w", policy, err)
@@ -225,12 +241,14 @@ func (s *AuthService) initializePolicies() error {
 	return nil
 }
 
+// RegisterUser регистрирует нового пользователя в системе
+// Валидирует данные, хеширует пароль, создает запись в БД и назначает роль
 func (s *AuthService) RegisterUser(ctx context.Context, req *models.RegisterRequest) (*models.User, error) {
 	if err := s.validateRegistrationRequest(req); err != nil {
 		return nil, err
 	}
 
-	// Check if user exists
+	// Проверка существования пользователя с таким email
 	existingUser, err := s.userRepo.GetUserByEmail(ctx, req.Email)
 	if err != nil {
 		s.logError("failed to check existing user", err, "email", req.Email)
@@ -240,27 +258,28 @@ func (s *AuthService) RegisterUser(ctx context.Context, req *models.RegisterRequ
 		return nil, ErrUserExists
 	}
 
-	// Hash password
+	// Хеширование пароля с bcrypt
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), s.config.BcryptCost)
 	if err != nil {
 		s.logError("failed to hash password", err, "email", req.Email)
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	// Create user
+	// Создание объекта пользователя
 	user := &models.User{
 		Name:     strings.TrimSpace(req.Name),
 		Email:    strings.ToLower(strings.TrimSpace(req.Email)),
 		Password: string(hashedPassword),
-		Role:     RoleUser,
+		Role:     RoleUser, // По умолчанию обычный пользователь
 	}
 
+	// Сохранение пользователя в БД
 	if err := s.userRepo.CreateUser(ctx, user); err != nil {
 		s.logError("failed to create user", err, "email", user.Email)
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	// Add role in Casbin
+	// Назначение роли в Casbin
 	if _, err := s.enforcer.AddRoleForUser(user.Email, user.Role); err != nil {
 		s.logError("failed to add role for user", err, "email", user.Email, "role", user.Role)
 		return nil, fmt.Errorf("failed to add role for user: %w", err)
@@ -268,11 +287,13 @@ func (s *AuthService) RegisterUser(ctx context.Context, req *models.RegisterRequ
 
 	s.logInfo("user registered successfully", "email", user.Email, "role", user.Role)
 	
-	// Don't return password hash
+	// Не возвращаем хеш пароля в ответе
 	user.Password = ""
 	return user, nil
 }
 
+// LoginUser аутентифицирует пользователя и выдает токены
+// Проверяет учетные данные, лимиты запросов и создает JWT токены
 func (s *AuthService) LoginUser(ctx context.Context, req *models.LoginRequest) (*TokenPair, error) {
 	if err := s.validateLoginRequest(req); err != nil {
 		return nil, err
@@ -280,50 +301,50 @@ func (s *AuthService) LoginUser(ctx context.Context, req *models.LoginRequest) (
 
 	email := strings.ToLower(strings.TrimSpace(req.Email))
 
-	// Check rate limiting
+	// Проверка лимита запросов (защита от брутфорса)
 	if s.rateLimiter != nil && !s.rateLimiter.IsAllowed(email) {
 		s.logInfo("login attempt blocked by rate limiter", "email", email)
 		return nil, ErrTooManyAttempts
 	}
 
-	// Get user
+	// Получение пользователя из БД
 	user, err := s.userRepo.GetUserByEmail(ctx, email)
 	if err != nil {
 		s.logError("failed to get user", err, "email", email)
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 	if user == nil {
-		// Record failed attempt for rate limiting
+		// Запись неудачной попытки для лимитера
 		if s.rateLimiter != nil {
 			s.rateLimiter.RecordAttempt(email)
 		}
 		return nil, ErrInvalidCredentials
 	}
 
-	// Verify password
+	// Проверка пароля с bcrypt
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
 		s.logInfo("invalid password attempt", "email", email)
-		// Record failed attempt for rate limiting
+		// Запись неудачной попытки
 		if s.rateLimiter != nil {
 			s.rateLimiter.RecordAttempt(email)
 		}
 		return nil, ErrInvalidCredentials
 	}
 
-	// Ensure role is in Casbin
+	// Убеждаемся что роль назначена в Casbin
 	if _, err := s.enforcer.AddRoleForUser(user.Email, user.Role); err != nil {
 		s.logError("failed to add role for user", err, "email", user.Email, "role", user.Role)
 		return nil, fmt.Errorf("failed to add role for user: %w", err)
 	}
 
-	// Create token pair
+	// Создание пары токенов (access + refresh)
 	tokenPair, err := s.createTokenPair(user)
 	if err != nil {
 		s.logError("failed to create token pair", err, "email", user.Email)
 		return nil, fmt.Errorf("failed to create token pair: %w", err)
 	}
 
-	// Reset rate limiting on successful login
+	// Сброс лимитера при успешном входе
 	if s.rateLimiter != nil {
 		s.rateLimiter.Reset(email)
 	}
@@ -332,14 +353,16 @@ func (s *AuthService) LoginUser(ctx context.Context, req *models.LoginRequest) (
 	return tokenPair, nil
 }
 
+// createTokenPair создает пару access и refresh токенов
+// Access токен - короткоживущий, refresh - долгоживущий для обновления
 func (s *AuthService) createTokenPair(user *models.User) (*TokenPair, error) {
-	// Create access token
+	// Создание access токена
 	accessToken, err := s.createJWTToken(user, s.config.TokenExpiration)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create refresh token
+	// Создание refresh токена
 	refreshToken, err := s.createJWTToken(user, s.config.RefreshTokenExp)
 	if err != nil {
 		return nil, err
@@ -352,6 +375,8 @@ func (s *AuthService) createTokenPair(user *models.User) (*TokenPair, error) {
 	}, nil
 }
 
+// createJWTToken создает JWT токен с указанным временем жизни
+// Содержит claims с информацией о пользователе
 func (s *AuthService) createJWTToken(user *models.User, expiration time.Duration) (string, error) {
 	claims := &Claims{
 		UserID: user.ID,
@@ -359,28 +384,32 @@ func (s *AuthService) createJWTToken(user *models.User, expiration time.Duration
 		Email:  user.Email,
 		Role:   user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiration)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
-			Subject:   fmt.Sprintf("%d", user.ID),
-			Issuer:    "mymindmap-api",
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiration)), // Время истечения
+			IssuedAt:  jwt.NewNumericDate(time.Now()),                 // Время создания
+			NotBefore: jwt.NewNumericDate(time.Now()),                 // Не действует до
+			Subject:   fmt.Sprintf("%d", user.ID),                     // ID пользователя как subject
+			Issuer:    "mymindmap-api",                                // Идентификатор издателя
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(s.config.JWTSecret)
+	return token.SignedString(s.config.JWTSecret) // Подпись токена секретным ключом
 }
 
+// ValidateToken проверяет валидность JWT токена и возвращает claims
+// Используется в middleware для аутентификации запросов
 func (s *AuthService) ValidateToken(tokenString string) (*Claims, error) {
 	if strings.TrimSpace(tokenString) == "" {
 		return nil, ErrInvalidToken
 	}
 
+	// Парсинг токена с проверкой подписи
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		// Проверка алгоритма подписи
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return s.config.JWTSecret, nil
+		return s.config.JWTSecret, nil // Возвращаем секрет для проверки подписи
 	})
 
 	if err != nil {
@@ -390,6 +419,7 @@ func (s *AuthService) ValidateToken(tokenString string) (*Claims, error) {
 		return nil, fmt.Errorf("failed to parse token: %w", err)
 	}
 
+	// Извлечение claims и проверка валидности токена
 	claims, ok := token.Claims.(*Claims)
 	if !ok || !token.Valid {
 		return nil, ErrInvalidToken
@@ -398,13 +428,16 @@ func (s *AuthService) ValidateToken(tokenString string) (*Claims, error) {
 	return claims, nil
 }
 
+// RefreshToken обновляет access токен с помощью refresh токена
+// Проверяет refresh токен и выдает новую пару токенов
 func (s *AuthService) RefreshToken(refreshTokenString string) (*TokenPair, error) {
+	// Валидация refresh токена
 	claims, err := s.ValidateToken(refreshTokenString)
 	if err != nil {
 		return nil, fmt.Errorf("invalid refresh token: %w", err)
 	}
 
-	// Get fresh user data
+	// Получение актуальных данных пользователя из БД
 	user, err := s.userRepo.GetUserByID(context.Background(), claims.UserID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
@@ -413,10 +446,12 @@ func (s *AuthService) RefreshToken(refreshTokenString string) (*TokenPair, error
 		return nil, ErrInvalidToken
 	}
 
-	// Create new token pair
+	// Создание новой пары токенов
 	return s.createTokenPair(user)
 }
 
+// CheckPermission проверяет разрешение для конкретной роли
+// sub - роль, obj - объект, act - действие
 func (s *AuthService) CheckPermission(subject, object, action string) bool {
 	allowed, err := s.enforcer.Enforce(subject, object, action)
 	if err != nil {
@@ -426,17 +461,22 @@ func (s *AuthService) CheckPermission(subject, object, action string) bool {
 	return allowed
 }
 
+// CheckPermissionForUser проверяет разрешение для конкретного пользователя
+// Определяет роли пользователя и проверяет права для каждой роли
 func (s *AuthService) CheckPermissionForUser(userEmail, object, action string) bool {
+	// Получение всех ролей пользователя
 	roles, err := s.enforcer.GetRolesForUser(userEmail)
 	if err != nil {
 		s.logError("failed to get roles for user", err, "email", userEmail)
-		return s.CheckPermission(RoleUser, object, action)
+		return s.CheckPermission(RoleUser, object, action) // Fallback к user роли
 	}
 	
+	// Если ролей нет - используем user роль
 	if len(roles) == 0 {
 		return s.CheckPermission(RoleUser, object, action)
 	}
 	
+	// Проверяем права для каждой роли пользователя
 	for _, role := range roles {
 		if s.CheckPermission(role, object, action) {
 			return true
@@ -446,14 +486,17 @@ func (s *AuthService) CheckPermissionForUser(userEmail, object, action string) b
 	return false
 }
 
+// GetUserRole возвращает основную роль пользователя
+// Если ролей несколько - возвращает первую
 func (s *AuthService) GetUserRole(email string) string {
 	roles, err := s.enforcer.GetRolesForUser(email)
 	if err != nil || len(roles) == 0 {
-		return RoleUser
+		return RoleUser // Роль по умолчанию
 	}
 	return roles[0]
 }
 
+// AddRoleForUser добавляет роль пользователю в системе прав доступа
 func (s *AuthService) AddRoleForUser(email, role string) error {
 	if !s.isValidRole(role) {
 		return fmt.Errorf("invalid role: %s", role)
@@ -466,6 +509,7 @@ func (s *AuthService) AddRoleForUser(email, role string) error {
 	return err
 }
 
+// RemoveRoleForUser удаляет роль у пользователя
 func (s *AuthService) RemoveRoleForUser(email, role string) error {
 	_, err := s.enforcer.RemoveGroupingPolicy(email, role)
 	if err == nil {
@@ -474,8 +518,9 @@ func (s *AuthService) RemoveRoleForUser(email, role string) error {
 	return err
 }
 
-// Validation methods
+// Методы валидации
 
+// validateRegistrationRequest валидирует данные для регистрации
 func (s *AuthService) validateRegistrationRequest(req *models.RegisterRequest) error {
 	if req == nil {
 		return errors.New("registration request is required")
@@ -496,6 +541,7 @@ func (s *AuthService) validateRegistrationRequest(req *models.RegisterRequest) e
 	return nil
 }
 
+// validateLoginRequest валидирует данные для входа
 func (s *AuthService) validateLoginRequest(req *models.LoginRequest) error {
 	if req == nil {
 		return errors.New("login request is required")
@@ -512,12 +558,14 @@ func (s *AuthService) validateLoginRequest(req *models.LoginRequest) error {
 	return nil
 }
 
+// validateEmail проверяет валидность email адреса
 func (s *AuthService) validateEmail(email string) error {
 	email = strings.TrimSpace(email)
 	if email == "" {
 		return errors.New("email is required")
 	}
 
+	// Регулярное выражение для проверки email
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	if !emailRegex.MatchString(email) {
 		return ErrInvalidEmail
@@ -526,6 +574,8 @@ func (s *AuthService) validateEmail(email string) error {
 	return nil
 }
 
+// validatePassword проверяет сложность пароля
+// Требования: минимум 8 символов, цифры, буквы в разных регистрах, спецсимволы
 func (s *AuthService) validatePassword(password string) error {
 	if len(password) < MinPasswordLength {
 		return fmt.Errorf("password must be at least %d characters long", MinPasswordLength)
@@ -535,11 +585,11 @@ func (s *AuthService) validatePassword(password string) error {
 		return fmt.Errorf("password must not exceed %d characters", MaxPasswordLength)
 	}
 
-	// Check for at least one digit, one lowercase, one uppercase, and one special character
-	hasDigit := regexp.MustCompile(`[0-9]`).MatchString(password)
-	hasLower := regexp.MustCompile(`[a-z]`).MatchString(password)
-	hasUpper := regexp.MustCompile(`[A-Z]`).MatchString(password)
-	hasSpecial := regexp.MustCompile(`[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~` + "`" + `]`).MatchString(password)
+	// Проверка сложности пароля
+	hasDigit := regexp.MustCompile(`[0-9]`).MatchString(password)           // Есть цифры
+	hasLower := regexp.MustCompile(`[a-z]`).MatchString(password)           // Есть строчные буквы
+	hasUpper := regexp.MustCompile(`[A-Z]`).MatchString(password)           // Есть заглавные буквы
+	hasSpecial := regexp.MustCompile(`[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~` + "`" + `]`).MatchString(password) // Есть спецсимволы
 
 	if !hasDigit || !hasLower || !hasUpper || !hasSpecial {
 		return ErrWeakPassword
@@ -548,6 +598,7 @@ func (s *AuthService) validatePassword(password string) error {
 	return nil
 }
 
+// isValidRole проверяет что роль является допустимой
 func (s *AuthService) isValidRole(role string) bool {
 	validRoles := []string{RoleUser, RoleAdmin, RoleAuthor}
 	for _, validRole := range validRoles {
@@ -558,17 +609,19 @@ func (s *AuthService) isValidRole(role string) bool {
 	return false
 }
 
-// Logging helpers
+// Вспомогательные методы логирования
 
+// logInfo логирует информационное сообщение
 func (s *AuthService) logInfo(msg string, args ...any) {
 	if s.logger != nil {
 		s.logger.Info(msg, args...)
 	}
 }
 
+// logError логирует сообщение об ошибке
 func (s *AuthService) logError(msg string, err error, args ...any) {
 	if s.logger != nil {
 		allArgs := append(args, "error", err)
 		s.logger.Error(msg, allArgs...)
 	}
-} 
+}
