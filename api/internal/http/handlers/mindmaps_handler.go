@@ -7,7 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mymindmap/api/auth"
+	"github.com/mymindmap/api/internal/auth"
+	"github.com/mymindmap/api/internal/http/middleware"
 	"github.com/mymindmap/api/models"
 	"github.com/mymindmap/api/repository"
 )
@@ -27,8 +28,8 @@ func NewMindMapHandler(mindMapRepo *repository.MindMapRepository, authService *a
 }
 
 func (h *MindMapHandler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/api/mindmaps", h.authService.AuthMiddleware(h.handleMindMaps))       // GET list, POST create
-	mux.HandleFunc("/api/mindmaps/", h.authService.AuthMiddleware(h.handleSingleMindMap)) // GET, PUT, DELETE by id
+	mux.HandleFunc("/api/mindmaps", middleware.AuthMiddleware(h.authService, h.handleMindMaps))       // GET list, POST create
+	mux.HandleFunc("/api/mindmaps/", middleware.AuthMiddleware(h.authService, h.handleSingleMindMap)) // GET, PUT, DELETE by id
 }
 
 // --- Handlers ---
@@ -68,7 +69,7 @@ func (h *MindMapHandler) handleSingleMindMap(w http.ResponseWriter, r *http.Requ
 
 // GetMindMaps - список
 func (h *MindMapHandler) GetMindMaps(w http.ResponseWriter, r *http.Request) {
-	user := auth.GetUserFromContext(r.Context())
+		user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
 		h.respondError(w, http.StatusUnauthorized, "unauthorized")
 		return
@@ -95,7 +96,7 @@ func (h *MindMapHandler) GetMindMap(w http.ResponseWriter, r *http.Request, id i
 		return
 	}
 
-	user := auth.GetUserFromContext(r.Context())
+		user := middleware.GetUserFromContext(r.Context())
 	if user == nil || mindmap.UserID != user.UserID && user.Role != "admin" {
 		h.respondError(w, http.StatusForbidden, "forbidden")
 		return
@@ -119,7 +120,7 @@ func (h *MindMapHandler) CreateMindMap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := auth.GetUserFromContext(r.Context())
+		user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
 		h.respondError(w, http.StatusUnauthorized, "unauthorized")
 		return
@@ -149,7 +150,7 @@ func (h *MindMapHandler) UpdateMindMap(w http.ResponseWriter, r *http.Request, i
 		return
 	}
 
-	user := auth.GetUserFromContext(r.Context())
+		user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
 		h.respondError(w, http.StatusUnauthorized, "unauthorized")
 		return
@@ -180,7 +181,7 @@ func (h *MindMapHandler) UpdateMindMap(w http.ResponseWriter, r *http.Request, i
 
 // DeleteMindMap
 func (h *MindMapHandler) DeleteMindMap(w http.ResponseWriter, r *http.Request, id int) {
-	user := auth.GetUserFromContext(r.Context())
+		user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
 		h.respondError(w, http.StatusUnauthorized, "unauthorized")
 		return

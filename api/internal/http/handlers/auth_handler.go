@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/mymindmap/api/auth"
+	"github.com/mymindmap/api/internal/auth"
+	"github.com/mymindmap/api/internal/http/middleware"
 	"github.com/mymindmap/api/models"
 	"github.com/mymindmap/api/repository"
 )
@@ -27,8 +28,8 @@ func (h *AuthHandler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/auth/register", h.Register)
 	mux.HandleFunc("/auth/logout", h.Logout)
 	mux.HandleFunc("/auth/refresh", h.RefreshToken)
-	mux.HandleFunc("/auth/check", h.authService.AuthMiddleware(h.Check))
-	mux.HandleFunc("/auth/user", h.authService.AuthMiddleware(h.GetCurrentUser))
+	mux.HandleFunc("/auth/check", middleware.AuthMiddleware(h.authService, h.Check))
+	mux.HandleFunc("/auth/user", middleware.AuthMiddleware(h.authService, h.GetCurrentUser))
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {

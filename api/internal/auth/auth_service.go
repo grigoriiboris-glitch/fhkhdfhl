@@ -64,20 +64,6 @@ var (
 	ErrTooManyAttempts    = errors.New("too many login attempts, please try again later")
 )
 
-// Config содержит конфигурацию сервиса аутентификации
-// Все настройки можно передать из внешнего config файла или переменных окружения
-type Config struct {
-	JWTSecret        []byte        // Секрет для подписи JWT токенов
-	SessionKey       []byte        // Ключ для сессий (если используются)
-	TokenExpiration  time.Duration // Время жизни access токена
-	RefreshTokenExp  time.Duration // Время жизни refresh токена
-	BcryptCost       int           // Сложность bcrypt хеширования
-	Logger           *slog.Logger  // Логгер для записи событий
-	EnableRateLimit  bool          // Включить лимитирование запросов
-	MaxLoginAttempts int           // Максимум попыток входа
-	RateLimitWindow  time.Duration // Окно времени для лимита
-	RateLimitBlock   time.Duration // Время блокировки после превышения лимита
-}
 
 // AuthService - основной сервис аутентификации и авторизации
 // Содержит бизнес-логику работы с пользователями, токенами и правами доступа

@@ -4,7 +4,8 @@ import (
     "encoding/json"
     "net/http"
 
-    "github.com/mymindmap/api/auth"
+    "github.com/mymindmap/api/internal/auth"
+    "github.com/mymindmap/api/internal/http/middleware"
     "github.com/mymindmap/api/repository"
 )
 
@@ -23,7 +24,7 @@ func (h *UserHandler) AuthCheck(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
         return
     }
-    claims := auth.GetUserFromContext(r.Context())
+    claims := middleware.GetUserFromContext(r.Context())
     w.Header().Set("Content-Type", "application/json")
     if claims == nil {
         w.WriteHeader(http.StatusUnauthorized)
@@ -40,7 +41,7 @@ func (h *UserHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
         return
     }
-    claims := auth.GetUserFromContext(r.Context())
+    claims := middleware.GetUserFromContext(r.Context())
     if claims == nil {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusUnauthorized)

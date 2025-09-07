@@ -7,7 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mymindmap/api/auth"
+	"github.com/mymindmap/api/internal/auth"
+	"github.com/mymindmap/api/internal/http/middleware"
 	"github.com/mymindmap/api/models"
 	"github.com/mymindmap/api/repository"
 )
@@ -27,8 +28,8 @@ func NewPostHandler(postRepo *repository.PostRepository, authService *auth.AuthS
 }
 
 func (h *PostHandler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/api/posts", h.authService.AuthMiddleware(h.handlePosts))       // GET list, POST create
-	mux.HandleFunc("/api/posts/", h.authService.AuthMiddleware(h.handleSinglePost)) // GET, PUT, DELETE by id
+	mux.HandleFunc("/api/posts", middleware.AuthMiddleware(h.authService, h.handlePosts))       // GET list, POST create
+	mux.HandleFunc("/api/posts/", middleware.AuthMiddleware(h.authService, h.handleSinglePost)) // GET, PUT, DELETE by id
 }
 
 // --- Handlers ---
@@ -105,7 +106,7 @@ func (h *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := auth.GetUserFromContext(r.Context())
+		user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
 		h.respondError(w, http.StatusUnauthorized, "unauthorized")
 		return
@@ -131,7 +132,7 @@ func (h *PostHandler) UpdatePost(w http.ResponseWriter, r *http.Request, id int)
 		return
 	}
 
-	user := auth.GetUserFromContext(r.Context())
+		user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
 		h.respondError(w, http.StatusUnauthorized, "unauthorized")
 		return
@@ -162,7 +163,7 @@ func (h *PostHandler) UpdatePost(w http.ResponseWriter, r *http.Request, id int)
 
 // DeletePost - удаление
 func (h *PostHandler) DeletePost(w http.ResponseWriter, r *http.Request, id int) {
-	user := auth.GetUserFromContext(r.Context())
+		user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
 		h.respondError(w, http.StatusUnauthorized, "unauthorized")
 		return

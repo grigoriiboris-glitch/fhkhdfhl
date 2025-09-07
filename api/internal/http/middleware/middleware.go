@@ -1,9 +1,11 @@
-package auth
+package middleware
 
 import (
 	"context"
 	"net/http"
 	"strings"
+
+	"github.com/mymindmap/api/internal/auth"
 )
 
 type contextKey string
@@ -13,7 +15,7 @@ const (
 )
 
 // AuthMiddleware проверяет JWT токен и добавляет пользователя в контекст
-func (s *AuthService) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+func AuthMiddleware(authService *auth.AuthService, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Получаем токен из заголовка Authorization
 		authHeader := r.Header.Get("Authorization")
@@ -38,7 +40,7 @@ func (s *AuthService) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
 		// Валидируем токен
-		claims, err := s.ValidateToken(tokenString)
+		claims, err := authService.ValidateToken(tokenString)
 		if err != nil {
 			// Если токен невалиден, продолжаем без авторизации
 			next.ServeHTTP(w, r)
@@ -52,7 +54,7 @@ func (s *AuthService) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // RequireAuth middleware требует авторизации для доступа
-func (s *AuthService) RequireAuth(next http.HandlerFunc) http.HandlerFunc {
+func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		claims := r.Context().Value(UserContextKey)
 		if claims == nil {
@@ -65,7 +67,7 @@ func (s *AuthService) RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // RequirePermission middleware проверяет права доступа
-func (s *AuthService) RequirePermission(object, action string) func(http.HandlerFunc) http.HandlerFunc {
+func RequirePermission(authService *auth.AuthService, object, action string) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			claims := r.Context().Value(UserContextKey)
@@ -74,10 +76,10 @@ func (s *AuthService) RequirePermission(object, action string) func(http.Handler
 				return
 			}
 
-			userClaims := claims.(*Claims)
+			userClaims := claims.(*auth.Claims)
 			
 			// Проверяем права доступа по роли пользователя
-			if !s.CheckPermission(userClaims.Role, object, action) {
+			if !authService.CheckPermission(userClaims.Role, object, action) {
 				http.Error(w, "Forbidden", http.StatusForbidden)
 				return
 			}
@@ -88,15 +90,15 @@ func (s *AuthService) RequirePermission(object, action string) func(http.Handler
 }
 
 // GetUserFromContext извлекает пользователя из контекста
-func GetUserFromContext(ctx context.Context) *Claims {
-	if user, ok := ctx.Value(UserContextKey).(*Claims); ok {
+func GetUserFromContext(ctx context.Context) *auth.Claims {
+	if user, ok := ctx.Value(UserContextKey).(*auth.Claims); ok {
 		return user
 	}
 	return nil
 }
 
 // SetAuthCookie устанавливает cookie с токеном авторизации
-func (s *AuthService) SetAuthCookie(w http.ResponseWriter, tokenPair *TokenPair) {
+func SetAuthCookie(authService *auth.AuthService, w http.ResponseWriter, tokenPair *auth.TokenPair) {
 	// Set access token cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "auth_token",
@@ -104,7 +106,7 @@ func (s *AuthService) SetAuthCookie(w http.ResponseWriter, tokenPair *TokenPair)
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   false, // Установите true для HTTPS
-		MaxAge:   int(s.config.TokenExpiration.Seconds()),
+		MaxAge:   int(authService.config.TokenExpiration.Seconds()),
 	})
 
 	// Set refresh token cookie
@@ -114,12 +116,12 @@ func (s *AuthService) SetAuthCookie(w http.ResponseWriter, tokenPair *TokenPair)
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   false, // Установите true для HTTPS
-		MaxAge:   int(s.config.RefreshTokenExp.Seconds()),
+		MaxAge:   int(authService.config.RefreshTokenExp.Seconds()),
 	})
 }
 
 // ClearAuthCookie удаляет cookie авторизации
-func (s *AuthService) ClearAuthCookie(w http.ResponseWriter) {
+func ClearAuthCookie(w http.ResponseWriter) {
 	// Clear access token cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "auth_token",

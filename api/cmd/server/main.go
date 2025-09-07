@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -11,13 +12,14 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/mymindmap/api/auth"
-	"github.com/mymindmap/api/internal/handlers"
+	"github.com/mymindmap/api/internal/auth"
+	"github.com/mymindmap/api/internal/http/handlers"
 	"github.com/mymindmap/api/repository"
 )
 
 type Config struct {
 	PostgresURL string
+	JWTSecret   string
 }
 
 func loadConfig() (*Config, error) {
@@ -27,9 +29,15 @@ func loadConfig() (*Config, error) {
 	user := os.Getenv("POSTGRES_USER")
 	pass := os.Getenv("POSTGRES_PASSWORD")
 	host := os.Getenv("POSTGRES_HOST")
+	jwtSecret := os.Getenv("JWT_SECRET")
 
 	if db == "" || user == "" || pass == "" || host == "" {
 		return nil, fmt.Errorf("missing database env vars")
+	}
+
+	if jwtSecret == "" {
+		jwtSecret = "default-jwt-secret-change-in-production" // fallback для разработки
+		log.Println("WARNING: Using default JWT secret. Set JWT_SECRET env variable in production!")
 	}
 
 	connStr := fmt.Sprintf(
@@ -37,7 +45,10 @@ func loadConfig() (*Config, error) {
 		user, pass, host, db,
 	)
 
-	return &Config{PostgresURL: connStr}, nil
+	return &Config{
+		PostgresURL: connStr,
+		JWTSecret:   jwtSecret,
+	}, nil
 }
 
 func main() {
@@ -69,10 +80,18 @@ func main() {
 	userRepo := repository.NewUserRepository(dbpool)
 	mindMapRepo := repository.NewMindMapRepository(dbpool)
 
-	// Сервисы
-	authConfig := &auth.Config{
-		EnableRateLimit: true,
+	// Конфигурация аутентификации
+	authConfig, err := auth.NewConfigFromEnv(slog.Default())
+	if err != nil {
+		log.Fatalf("auth config error: %v", err)
 	}
+
+	// Переопределяем JWT секрет из основного конфига
+	if conf.JWTSecret != "" {
+		authConfig.JWTSecret = []byte(conf.JWTSecret)
+	}
+
+	// Сервисы
 	authService, err := auth.NewAuthService(userRepo, authConfig)
 	if err != nil {
 		log.Fatalf("auth service error: %v", err)
