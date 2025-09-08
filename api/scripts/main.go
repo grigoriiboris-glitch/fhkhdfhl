@@ -61,6 +61,11 @@ func parseModels(path string) ([]Model, error) {
 	}
 
 	var models []Model
+	// Берём только структуры из package "models"
+	if node.Name.Name != "models" {
+		return models, nil
+	}
+
 	for _, decl := range node.Decls {
 		gen, ok := decl.(*ast.GenDecl)
 		if !ok {
@@ -92,6 +97,7 @@ func parseModels(path string) ([]Model, error) {
 	}
 	return models, nil
 }
+
 
 func generateCRUD(model Model) {
 	files := map[string]string{
