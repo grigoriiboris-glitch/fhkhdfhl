@@ -1,0 +1,34 @@
+package repository
+
+type {{.Name}}Repository interface {
+	Get(id int64) (interface{}, error)
+	Create(data interface{}) error
+	Update(id int64, data interface{}) error
+	Delete(id int64) error
+}
+
+type {{.Name}}Repo struct{}
+
+func New{{.Name}}Repo() *{{.Name}}Repo {
+	return &{{.Name}}Repo{}
+}
+
+func (r *{{.Name}}Repo) Get(id int64) (interface{}, error) {
+	// TODO: DB query
+	return nil, nil
+}
+
+func (r *{{.Name}}Repo) Create(data interface{}) error {
+	// TODO: DB insert
+	return nil
+}
+
+func (r *{{.Name}}Repo) Update(id int64, data interface{}) error {
+	// TODO: DB update
+	return nil
+}
+
+func (r *{{.Name}}Repo) Delete(id int64) error {
+	// TODO: DB delete
+	return nil
+}

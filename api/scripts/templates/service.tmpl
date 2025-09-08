@@ -1,0 +1,27 @@
+package services
+
+import "your_project/repository"
+
+type {{.Name}}Service struct {
+	repo repository.{{.Name}}Repository
+}
+
+func New{{.Name}}Service(r repository.{{.Name}}Repository) *{{.Name}}Service {
+	return &{{.Name}}Service{repo: r}
+}
+
+func (s *{{.Name}}Service) Get(id int64) (interface{}, error) {
+	return s.repo.Get(id)
+}
+
+func (s *{{.Name}}Service) Create(data interface{}) error {
+	return s.repo.Create(data)
+}
+
+func (s *{{.Name}}Service) Update(id int64, data interface{}) error {
+	return s.repo.Update(id, data)
+}
+
+func (s *{{.Name}}Service) Delete(id int64) error {
+	return s.repo.Delete(id)
+}

@@ -1,0 +1,17 @@
+package requests
+
+// Create{{.Name}}Request используется для создания {{.Name}}
+type Create{{.Name}}Request struct {
+{{- range .Fields }}
+    {{- if ne .Name "ID" }}
+    {{ .Name }} {{ .Type }} `json:"{{ lower .Name }}" validate:"required"`
+    {{- end }}
+{{- end }}
+}
+
+// Update{{.Name}}Request используется для обновления {{.Name}}
+type Update{{.Name}}Request struct {
+{{- range .Fields }}
+    {{ .Name }} {{ .Type }} `json:"{{ lower .Name }}"`
+{{- end }}
+}

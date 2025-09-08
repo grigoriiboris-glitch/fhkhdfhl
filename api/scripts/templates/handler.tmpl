@@ -1,0 +1,21 @@
+package handlers
+
+import (
+	"net/http"
+)
+
+func Get{{.Name}}(w http.ResponseWriter, r *http.Request) {
+	// TODO: вызвать сервис для получения одного {{.Name}}
+}
+
+func Create{{.Name}}(w http.ResponseWriter, r *http.Request) {
+	// TODO: распарсить requedst, вызвать сервис
+}
+
+func Update{{.Name}}(w http.ResponseWriter, r *http.Request) {
+	// TODO: обновление {{.Name}}
+}
+
+func Delete{{.Name}}(w http.ResponseWriter, r *http.Request) {
+	// TODO: удалить {{.Name}}
+}
