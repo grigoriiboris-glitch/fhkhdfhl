@@ -7,19 +7,19 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"{{ .Module }}/internal/http/requests/{{ .VarName }}"
-	"{{ .Module }}/internal/services"
+	"github.com/mymindmap/api/internal/http/requests/log"
+	"github.com/mymindmap/api/internal/services/log_service"
 )
 
-type {{ .Name }}Handler struct {
-	service {{ .VarName }}.{{ .Name }}Service
+type LogHandler struct {
+	service log_service.LogService
 }
 
-func New{{ .Name }}Handler(service {{ .VarName }}.{{ .Name }}Service) *{{ .Name }}Handler {
-	return &{{ .Name }}Handler{service: service}
+func NewLogHandler(service log_service.LogService) *LogHandler {
+	return &LogHandler{service: service}
 }
 
-func (h *{{ .Name }}Handler) RegisterRoutes(r chi.Router) {
+func (h *LogHandler) RegisterRoutes(r chi.Router) {
 	r.Get("/", h.List)
 	r.Post("/", h.Create)
 	r.Get("/{id}", h.Get)
@@ -27,7 +27,7 @@ func (h *{{ .Name }}Handler) RegisterRoutes(r chi.Router) {
 	r.Delete("/{id}", h.Delete)
 }
 
-func (h *{{ .Name }}Handler) List(w http.ResponseWriter, r *http.Request) {
+func (h *LogHandler) List(w http.ResponseWriter, r *http.Request) {
 	// Parse pagination parameters from query string
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
@@ -55,8 +55,8 @@ func (h *{{ .Name }}Handler) List(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(items)
 }
 
-func (h *{{ .Name }}Handler) Create(w http.ResponseWriter, r *http.Request) {
-	var req {{ .VarName }}.Create{{ .Name }}Request
+func (h *LogHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var req log.CreateLogRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
@@ -76,7 +76,7 @@ func (h *{{ .Name }}Handler) Create(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"message": "created successfully"})
 }
 
-func (h *{{ .Name }}Handler) Get(w http.ResponseWriter, r *http.Request) {
+func (h *LogHandler) Get(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -91,7 +91,7 @@ func (h *{{ .Name }}Handler) Get(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(item)
 }
 
-func (h *{{ .Name }}Handler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *LogHandler) Update(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -99,7 +99,7 @@ func (h *{{ .Name }}Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req {{ .VarName }}.Update{{ .Name }}Request
+	var req log.UpdateLogRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
@@ -124,7 +124,7 @@ func (h *{{ .Name }}Handler) Update(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(item)
 }
 
-func (h *{{ .Name }}Handler) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *LogHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {

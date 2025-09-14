@@ -36,6 +36,7 @@ services:
       POSTGRES_DB: mindmap_db
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres
+      APP_PACKAGE_NAME: github.com/mymindmap/api
     depends_on:
       postgres:
         condition: service_healthy

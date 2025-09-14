@@ -1,0 +1,52 @@
+package routes
+
+import (
+	"context"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"{{ .Module }}/internal/auth"
+	"{{ .Module }}/internal/http/handlers"
+	"{{ .Module }}/internal/services"
+	"{{ .Module }}/repository"
+)
+
+func NewRouter(ctx context.Context, dbpool *pgxpool.Pool, authConfig *auth.Config) (http.Handler, error) {
+	r := chi.NewRouter()
+
+	// ===== Repositories =====
+{{- range .Models }}
+	{{ .VarName }}Repo := repository.New{{ .Name }}Repository(dbpool)
+{{- end }}
+
+	// ===== Services =====
+{{- range .Models }}
+	{{ .VarName }}Service := services.New{{ .Name }}Service({{ .VarName }}Repo)
+{{- end }}
+
+	// ===== Handlers =====
+{{- range .Models }}
+	{{ .VarName }}Handler := handlers.New{{ .Name }}Handler({{ .VarName }}Service)
+{{- end }}
+
+	// ===== RegisterRoutes =====
+{{- range .Models }}
+	r.Route("/{{ lower .Name }}s", func(r chi.Router) {
+		r.Get("/", {{ .VarName }}Handler.List)
+		r.Post("/", {{ .VarName }}Handler.Create)
+		r.Get("/{id}", {{ .VarName }}Handler.Get)
+		r.Put("/{id}", {{ .VarName }}Handler.Update)
+		r.Delete("/{id}", {{ .VarName }}Handler.Delete)
+	})
+{{- end }}
+
+	// ===== Healthcheck =====
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
+	})
+
+	return r, nil
+}

@@ -8,6 +8,8 @@ d:
 
 app:
 	docker-compose up api-backend
+appb:
+	docker-compose up --build api-backend
 f:
 	docker-compose up mindmap-frontend
 
@@ -21,6 +23,9 @@ test:
 
 td:
 	docker exec -it -w /app/$(DIR) mindmap-api go test -cover
+
+cr:
+	docker exec -it  mindmap-api go run scripts/main.go
 ##	docker exec -it -w /app/auth mindmap-api go test -cover
 
 # Значение по умолчанию

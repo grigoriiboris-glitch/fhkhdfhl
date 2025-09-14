@@ -100,13 +100,14 @@ func GetUserFromContext(ctx context.Context) *auth.Claims {
 // SetAuthCookie устанавливает cookie с токеном авторизации
 func SetAuthCookie(authService *auth.AuthService, w http.ResponseWriter, tokenPair *auth.TokenPair) {
 	// Set access token cookie
+	config := authService.GetConfig()
 	http.SetCookie(w, &http.Cookie{
 		Name:     "auth_token",
 		Value:    tokenPair.AccessToken,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   false, // Установите true для HTTPS
-		MaxAge:   int(authService.config.TokenExpiration.Seconds()),
+		MaxAge:   int(config.TokenExpiration.Seconds()),
 	})
 
 	// Set refresh token cookie
@@ -116,7 +117,7 @@ func SetAuthCookie(authService *auth.AuthService, w http.ResponseWriter, tokenPa
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   false, // Установите true для HTTPS
-		MaxAge:   int(authService.config.RefreshTokenExp.Seconds()),
+		MaxAge:   int(config.RefreshTokenExp.Seconds()),
 	})
 }
 

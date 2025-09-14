@@ -93,6 +93,10 @@ type TokenPair struct {
 	ExpiresAt    int64  `json:"expires_at"`    // Unix timestamp истечения access токена
 }
 
+func (a *AuthService) GetConfig() *Config {
+    return a.config
+}
+
 // NewAuthService создает новый экземпляр сервиса аутентификации
 // Инициализирует все зависимости: Casbin, лимитер, настройки
 func NewAuthService(userRepo UserRepositoryInterface, config *Config) (*AuthService, error) {

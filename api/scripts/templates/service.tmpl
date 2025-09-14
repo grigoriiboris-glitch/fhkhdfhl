@@ -1,27 +1,65 @@
-package services
+package {{ .VarName }}
 
-import "your_project/repository"
+import (
+	"{{ .Module }}/internal/http/requests/{{ .VarName }}"
+	"{{ .Module }}/models"
+	"{{ .Module }}/repository"
+)
 
-type {{.Name}}Service struct {
-	repo repository.{{.Name}}Repository
+type {{ .Name }}Service interface {
+	List(limit, offset int) ([]models.{{ .Name }}, error)
+	Get(id int) (*models.{{ .Name }}, error)
+	Create(req {{ .VarName }}.Create{{ .Name }}Request) error
+	Update(id int, req {{ .VarName }}.Update{{ .Name }}Request) error
+	Delete(id int) error
 }
 
-func New{{.Name}}Service(r repository.{{.Name}}Repository) *{{.Name}}Service {
-	return &{{.Name}}Service{repo: r}
+type {{ .VarName }}Service struct {
+	repo *repository.{{ .Name }}Repository
 }
 
-func (s *{{.Name}}Service) Get(id int64) (interface{}, error) {
+func New{{ .Name }}Service(repo *repository.{{ .Name }}Repository) {{ .Name }}Service {
+	return &{{ .VarName }}Service{repo: repo}
+}
+
+func (s *{{ .VarName }}Service) List(limit, offset int) ([]models.{{ .Name }}, error) {
+	return s.repo.List(limit, offset)
+}
+
+func (s *{{ .VarName }}Service) Get(id int) (*models.{{ .Name }}, error) {
 	return s.repo.Get(id)
 }
 
-func (s *{{.Name}}Service) Create(data interface{}) error {
-	return s.repo.Create(data)
+func (s *{{ .VarName }}Service) Create(req {{ .VarName }}.Create{{ .Name }}Request) error {
+	item := &models.{{ .Name }}{
+		// TODO: маппинг req -> модель
+		// Example fields based on your Log model:
+		// Title:   req.Title,
+		// Content: req.Content,
+		// UserId:  req.UserId,
+	}
+	return s.repo.Create(item)
 }
 
-func (s *{{.Name}}Service) Update(id int64, data interface{}) error {
-	return s.repo.Update(id, data)
+func (s *{{ .VarName }}Service) Update(id int, req {{ .VarName }}.Update{{ .Name }}Request) error {
+	// Create update map based on request
+	updates := make(map[string]interface{})
+	
+	// TODO: Add field mappings from req to updates map
+	// Example:
+	// if req.Title != "" {
+	//     updates["title"] = req.Title
+	// }
+	// if req.Content != "" {
+	//     updates["content"] = req.Content
+	// }
+	// if req.UserId != 0 {
+	//     updates["user_id"] = req.UserId
+	// }
+	
+	return s.repo.Update(id, updates)
 }
 
-func (s *{{.Name}}Service) Delete(id int64) error {
+func (s *{{ .VarName }}Service) Delete(id int) error {
 	return s.repo.Delete(id)
 }

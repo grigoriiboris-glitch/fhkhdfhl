@@ -1,0 +1,14 @@
+package {{ .PackageName }}
+
+import "github.com/go-playground/validator/v10"
+
+type Update{{.Name}}Request struct {
+{{- range .Fields }}
+    {{ .Name }} {{ .Type }} `json:"{{ lower .Name }}"`
+{{- end }}
+}
+
+func (r *Update{{.Name}}Request) Validate() error {
+    v := validator.New()
+    return v.Struct(r)
+}

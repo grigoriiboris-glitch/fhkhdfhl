@@ -1,0 +1,16 @@
+package {{ .PackageName }}
+
+import "github.com/go-playground/validator/v10"
+
+type Create{{.Name}}Request struct {
+{{- range .Fields }}
+    {{- if and (ne .Name "ID") (ne .Name "CreatedAt") (ne .Name "UpdatedAt") }}
+    {{ .Name }} {{ .Type }} `json:"{{ snake .Name }}" validate:"required"`
+    {{- end }}
+{{- end }}
+}
+
+func (r *Create{{.Name}}Request) Validate() error {
+    v := validator.New()
+    return v.Struct(r)
+}

@@ -13,7 +13,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/mymindmap/api/internal/auth"
-	"github.com/mymindmap/api/internal/http/routes"
+	"github.com/mymindmap/api/internal/http/handlers"
+	"github.com/mymindmap/api/repository"
 )
 
 type Config struct {
@@ -35,7 +36,7 @@ func loadConfig() (*Config, error) {
 	}
 
 	if jwtSecret == "" {
-		jwtSecret = "default-jwt-secret-change-in-production"
+		jwtSecret = "default-jwt-secret-change-in-production" // fallback для разработки
 		log.Println("WARNING: Using default JWT secret. Set JWT_SECRET env variable in production!")
 	}
 
@@ -74,37 +75,46 @@ func main() {
 	}
 	defer dbpool.Close()
 
+	// Репозитории
+	postRepo := repository.NewPostRepository(dbpool)
+	userRepo := repository.NewUserRepository(dbpool)
+	mindMapRepo := repository.NewMindMapRepository(dbpool)
+
 	// Конфигурация аутентификации
 	authConfig, err := auth.NewConfigFromEnv(slog.Default())
 	if err != nil {
 		log.Fatalf("auth config error: %v", err)
 	}
+
+	// Переопределяем JWT секрет из основного конфига
 	if conf.JWTSecret != "" {
 		authConfig.JWTSecret = []byte(conf.JWTSecret)
 	}
 
-	// Роутер через DI
-	// Получаем основной роутер с CRUD
-	mainRouter, err := routes.NewRouter(ctx, dbpool, authConfig)
+	// Сервисы
+	authService, err := auth.NewAuthService(userRepo, authConfig)
 	if err != nil {
-		log.Fatalf("router error: %v", err)
+		log.Fatalf("auth service error: %v", err)
 	}
 
-	// Оборачиваем основной роутер в chi.Router для добавления ручных маршрутов
-	r := chi.NewRouter()
-	r.Mount("/", mainRouter) // подключаем все CRUD маршруты
+	// Handlers
+	authHandler := handlers.NewAuthHandler(authService, userRepo, log.Default())
+	postHandler := handlers.NewPostHandler(postRepo, authService, log.Default())
+	mindMapHandler := handlers.NewMindMapHandler(mindMapRepo, authService, log.Default())
 
-	// ===== Ручные маршруты =====
-	r.Get("/manual/hello", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello from manual route!"))
+	// Router
+	mux := http.NewServeMux()
+	authHandler.RegisterRoutes(mux)
+	postHandler.RegisterRoutes(mux)
+	mindMapHandler.RegisterRoutes(mux)
+
+	// Healthcheck
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
-
-	// r.Get("/manual/secure", routes.JWTMiddleware(authConfig)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// 	userID := r.Context().Value("userID")
-	// 	w.Write([]byte(fmt.Sprintf("Secure manual route, userID=%v", userID)))
-	// })).ServeHTTP)
 
 	addr := ":8000"
 	log.Printf("server started on %s", addr)
-	log.Fatal(http.ListenAndServe(addr, r))
+	log.Fatal(http.ListenAndServe(addr, mux))
 }
