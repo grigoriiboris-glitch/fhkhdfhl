@@ -1,0 +1,37 @@
+import { reactive, toRef } from "vue";
+import router from "@/router";
+import User from "@/models/User";
+import axios from "axios";
+
+const state = reactive({
+  mindMap:[],
+  loading: false,
+  error: ''
+});
+
+axios.defaults.withCredentials = true;
+
+async function createMap(email, password) {
+  state.loading = true;
+  state.error = '';
+  try {
+    await axios.post(
+      '/auth/login',
+      { email, password },
+    );
+    await me();
+    await router.push('/');
+    return true;
+  } catch (e) {
+    state.error = e.response?.data || e.message || 'createMap error';
+    return false;
+  } finally {
+    state.loading = false;
+  }
+}
+
+export default function useMindMap() {
+  return {
+    createMap
+  };
+}

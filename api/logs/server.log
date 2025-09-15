@@ -1,0 +1,20 @@
+2025/09/12 13:02:20.657858 REQUEST: method=GET, url=/auth/user, remote=172.21.0.4:33804, content-type= body=
+2025/09/12 13:02:20.663635 REQUEST: method=GET, url=/auth/user, remote=172.21.0.4:33804, content-type= body=
+2025/09/12 13:02:20.670740 REQUEST: method=GET, url=/auth/user, remote=172.21.0.4:33804, content-type= body=
+2025/09/12 13:02:20.673640 REQUEST: method=GET, url=/auth/user, remote=172.21.0.4:33804, content-type= body=
+2025/09/12 13:02:20.676157 REQUEST: method=GET, url=/auth/user, remote=172.21.0.4:33804, content-type= body=
+2025/09/12 13:02:20.678405 REQUEST: method=GET, url=/auth/user, remote=172.21.0.4:33804, content-type= body=
+2025/09/12 13:02:20.681450 REQUEST: method=GET, url=/auth/user, remote=172.21.0.4:33804, content-type= body=
+2025/09/12 13:02:20.683433 REQUEST: method=GET, url=/auth/user, remote=172.21.0.4:33804, content-type= body=
+2025/09/12 13:02:20.685179 REQUEST: method=GET, url=/auth/user, remote=172.21.0.4:33804, content-type= body=
+2025/09/12 13:02:20.687046 REQUEST: method=GET, url=/auth/user, remote=172.21.0.4:33804, content-type= body=
+2025/09/12 13:02:20.688977 REQUEST: method=GET, url=/auth/user, remote=172.21.0.4:33804, content-type= body=
+2025/09/12 13:02:20.691750 REQUEST: method=GET, url=/auth/user, remote=172.21.0.4:33804, content-type= body=
+2025/09/12 13:02:20.694061 REQUEST: method=GET, url=/auth/user, remote=172.21.0.4:33804, content-type= body=
+2025/09/12 13:02:22.081758 REQUEST: method=POST, url=/auth/login, remote=172.21.0.4:33804, content-type=application/json body={"email":"oleg3@gmail.com","password":"oleg3@gmail.com"}
+2025/09/12 13:02:22.082855 loginHandler: method=POST, url=/auth/login
+2025/09/12 13:02:22.158524 REQUEST: method=GET, url=/auth/user, remote=172.21.0.4:33804, content-type= body=
+2025/09/12 13:02:22.175323 REQUEST: method=GET, url=/api/mindmaps, remote=172.21.0.4:33812, content-type= body=
+2025/09/12 13:02:32.174874 REQUEST: method=GET, url=/auth/user, remote=172.21.0.4:33804, content-type= body=
+2025/09/12 13:02:32.176692 REQUEST: method=GET, url=/auth/user, remote=172.21.0.4:33804, content-type= body=
+2025/09/12 13:02:32.237011 REQUEST: method=GET, url=/api/mindmaps, remote=172.21.0.4:33812, content-type= body=
