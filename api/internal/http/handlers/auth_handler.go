@@ -63,11 +63,24 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.authService.SetAuthCookie(w, tokenPair)
-	h.respondJSON(w, http.StatusOK, map[string]any{
-		"success":      true,
-		"access_token": tokenPair.AccessToken,
-		"expires_at":   tokenPair.ExpiresAt,
+	config := h.authService.GetConfig()
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    tokenPair.AccessToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false, // Установите true для HTTPS
+		MaxAge:   int(config.TokenExpiration.Seconds()),
+	})
+
+	// Set refresh token cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    tokenPair.RefreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false, // Установите true для HTTPS
+		MaxAge:   int(config.RefreshTokenExp.Seconds()),
 	})
 }
 
@@ -107,7 +120,26 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	h.authService.ClearAuthCookie(w)
+		// Clear access token cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		MaxAge:   -1,
+	})
+
+	// Clear refresh token cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		MaxAge:   -1,
+	})
+
 	h.respondJSON(w, http.StatusOK, map[string]any{"success": true})
 }
 
@@ -142,7 +174,26 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.authService.SetAuthCookie(w, tokenPair)
+	config := h.authService.GetConfig()
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    tokenPair.AccessToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false, // Установите true для HTTPS
+		MaxAge:   int(config.TokenExpiration.Seconds()),
+	})
+
+	// Set refresh token cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    tokenPair.RefreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false, // Установите true для HTTPS
+		MaxAge:   int(config.RefreshTokenExp.Seconds()),
+	})
+	
 	h.respondJSON(w, http.StatusOK, map[string]any{
 		"success":      true,
 		"access_token": tokenPair.AccessToken,
@@ -151,7 +202,7 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Check(w http.ResponseWriter, r *http.Request) {
-	user := auth.GetUserFromContext(r.Context())
+	user := middleware.GetUserFromContext(r.Context())
 	if user == nil {
 		h.respondError(w, http.StatusUnauthorized, "unauthorized")
 		return
@@ -160,7 +211,7 @@ func (h *AuthHandler) Check(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
-	claims := auth.GetUserFromContext(r.Context())
+	claims := middleware.GetUserFromContext(r.Context())
 	if claims == nil {
 		h.respondError(w, http.StatusUnauthorized, "unauthorized")
 		return

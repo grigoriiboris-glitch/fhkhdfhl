@@ -9,7 +9,7 @@ import (
 
 	"github.com/mymindmap/api/internal/auth"
 	"github.com/mymindmap/api/internal/http/handlers"
-	"github.com/mymindmap/api/internal/services"
+	"github.com/mymindmap/api/internal/services/log_service"
 	"github.com/mymindmap/api/repository"
 )
 
@@ -20,7 +20,7 @@ func NewRouter(ctx context.Context, dbpool *pgxpool.Pool, authConfig *auth.Confi
 	logRepo := repository.NewLogRepository(dbpool)
 
 	// ===== Services =====
-	logService := services.NewLogService(logRepo)
+	logService := log_service.NewLogService(logRepo)
 
 	// ===== Handlers =====
 	logHandler := handlers.NewLogHandler(logService)

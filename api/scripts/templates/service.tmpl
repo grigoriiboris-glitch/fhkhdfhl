@@ -1,17 +1,19 @@
 package {{ .VarName }}
 
 import (
+	"context"
 	"{{ .Module }}/internal/http/requests/{{ .VarName }}"
 	"{{ .Module }}/models"
 	"{{ .Module }}/repository"
 )
 
 type {{ .Name }}Service interface {
-	List(limit, offset int) ([]models.{{ .Name }}, error)
-	Get(id int) (*models.{{ .Name }}, error)
-	Create(req {{ .VarName }}.Create{{ .Name }}Request) error
-	Update(id int, req {{ .VarName }}.Update{{ .Name }}Request) error
-	Delete(id int) error
+	List(ctx context.Context, limit, offset int) ([]models.{{ .Name }}, error)
+	Get(ctx context.Context, id int) (*models.{{ .Name }}, error)
+	Create(ctx context.Context, req {{ .VarName }}.Create{{ .Name }}Request) error
+	Update(ctx context.Context, id int, req {{ .VarName }}.Update{{ .Name }}Request) error
+	Delete(ctx context.Context, id int) error
+	Count(ctx context.Context) (int, error)
 }
 
 type {{ .VarName }}Service struct {
@@ -22,15 +24,15 @@ func New{{ .Name }}Service(repo *repository.{{ .Name }}Repository) {{ .Name }}Se
 	return &{{ .VarName }}Service{repo: repo}
 }
 
-func (s *{{ .VarName }}Service) List(limit, offset int) ([]models.{{ .Name }}, error) {
-	return s.repo.List(limit, offset)
+func (s *{{ .VarName }}Service) List(ctx context.Context, limit, offset int) ([]models.{{ .Name }}, error) {
+	return s.repo.List(ctx, limit, offset)
 }
 
-func (s *{{ .VarName }}Service) Get(id int) (*models.{{ .Name }}, error) {
-	return s.repo.Get(id)
+func (s *{{ .VarName }}Service) Get(ctx context.Context, id int) (*models.{{ .Name }}, error) {
+	return s.repo.Get(ctx, id)
 }
 
-func (s *{{ .VarName }}Service) Create(req {{ .VarName }}.Create{{ .Name }}Request) error {
+func (s *{{ .VarName }}Service) Create(ctx context.Context, req {{ .VarName }}.Create{{ .Name }}Request) error {
 	item := &models.{{ .Name }}{
 		// TODO: маппинг req -> модель
 		// Example fields based on your Log model:
@@ -38,10 +40,10 @@ func (s *{{ .VarName }}Service) Create(req {{ .VarName }}.Create{{ .Name }}Reque
 		// Content: req.Content,
 		// UserId:  req.UserId,
 	}
-	return s.repo.Create(item)
+	return s.repo.Create(ctx, item)
 }
 
-func (s *{{ .VarName }}Service) Update(id int, req {{ .VarName }}.Update{{ .Name }}Request) error {
+func (s *{{ .VarName }}Service) Update(ctx context.Context, id int, req {{ .VarName }}.Update{{ .Name }}Request) error {
 	// Create update map based on request
 	updates := make(map[string]interface{})
 	
@@ -57,9 +59,13 @@ func (s *{{ .VarName }}Service) Update(id int, req {{ .VarName }}.Update{{ .Name
 	//     updates["user_id"] = req.UserId
 	// }
 	
-	return s.repo.Update(id, updates)
+	return s.repo.Update(ctx, id, updates)
 }
 
-func (s *{{ .VarName }}Service) Delete(id int) error {
-	return s.repo.Delete(id)
+func (s *{{ .VarName }}Service) Delete(ctx context.Context, id int) error {
+	return s.repo.Delete(ctx, id)
+}
+
+func (s *{{ .VarName }}Service) Count(ctx context.Context) (int, error) {
+	return s.repo.Count(ctx)
 }
