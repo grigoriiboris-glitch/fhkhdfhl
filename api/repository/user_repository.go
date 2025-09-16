@@ -7,8 +7,8 @@ import (
 	"github.com/mymindmap/api/models"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/mymindmap/api/pkg/relations"
-	"log"
+	//"github.com/mymindmap/api/pkg/relations"
+	//"log"
 )
 
 type UserRepository struct {
@@ -96,21 +96,21 @@ func (r *UserRepository) GetUserByID(ctx context.Context, id int) (*models.User,
 	// Создание отношений
 	//mindMap := &models.MindMap{}
 	
-	builder := relations.NewQueryBuilder(user)
+// 	builder := relations.NewQueryBuilder(user)
 	
-	// Регистрация отношений
-builder.RegisterRelation("mindmaps", relations.NewHasMany(
-	func() relations.Model { return &models.MindMap{} }, // Возвращаем новый экземпляр
-	relations.RelationConfig{
-		ForeignKey: "user_id", // Указываем foreign key
-		LocalKey:   "id",      // Указываем local key
-	},
-))
+// 	// Регистрация отношений
+// builder.RegisterRelation("mindmaps", relations.NewHasMany(
+// 	func() relations.Model { return &models.MindMap{} }, // Возвращаем новый экземпляр
+// 	relations.RelationConfig{
+// 		ForeignKey: "user_id", // Указываем foreign key
+// 		LocalKey:   "id",      // Указываем local key
+// 	},
+// ))
 	
-	// Загрузка пользователя с постами
-	if err := builder.With("mindmaps").Get(ctx, 1); err != nil {
-		log.Fatal(err)
-	}
+// 	// Загрузка пользователя с постами
+// 	if err := builder.With("mindmaps").Get(ctx, 1); err != nil {
+// 		log.Fatal(err)
+// 	}
 	//return user.MindMaps, nil
 
 	return user, nil

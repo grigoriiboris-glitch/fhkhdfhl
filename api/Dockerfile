@@ -1,5 +1,5 @@
 # Use Go 1.21 alpine as base image
-FROM golang:1.24-alpine AS base
+FROM golang:1.25.1-alpine AS base
 
 # Development stage
 # =============================================================================

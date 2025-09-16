@@ -28,6 +28,8 @@ func (h *LogHandler) RegisterRoutes(r chi.Router) {
 }
 
 func (h *LogHandler) List(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	
 	// Parse pagination parameters from query string
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
@@ -47,7 +49,7 @@ func (h *LogHandler) List(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	
-	items, err := h.service.List(limit, offset)
+	items, err := h.service.List(ctx, limit, offset)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -56,6 +58,8 @@ func (h *LogHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *LogHandler) Create(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	
 	var req log.CreateLogRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)
@@ -66,24 +70,24 @@ func (h *LogHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// Changed: service.Create now returns error only
-	if err := h.service.Create(req); err != nil {
+	if err := h.service.Create(ctx, req); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	// If you need to return the created item, you'll need to modify your service
 	_ = json.NewEncoder(w).Encode(map[string]string{"message": "created successfully"})
 }
 
 func (h *LogHandler) Get(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
 	}
-	item, err := h.service.Get(id)
+	item, err := h.service.Get(ctx, id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -92,6 +96,8 @@ func (h *LogHandler) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *LogHandler) Update(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -109,14 +115,12 @@ func (h *LogHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// Changed: service.Update now returns error only
-	if err := h.service.Update(id, req); err != nil {
+	if err := h.service.Update(ctx, id, req); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	
-	// If you need to return the updated item, fetch it again
-	item, err := h.service.Get(id)
+	item, err := h.service.Get(ctx, id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -125,13 +129,15 @@ func (h *LogHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *LogHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
 	}
-	if err := h.service.Delete(id); err != nil {
+	if err := h.service.Delete(ctx, id); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

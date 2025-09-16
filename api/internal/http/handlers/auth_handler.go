@@ -211,6 +211,7 @@ func (h *AuthHandler) Check(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
+	log.Printf("auth service error:")
 	claims := middleware.GetUserFromContext(r.Context())
 	if claims == nil {
 		h.respondError(w, http.StatusUnauthorized, "unauthorized")

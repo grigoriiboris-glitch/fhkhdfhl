@@ -26,6 +26,7 @@ func (s *userService) List() ([]*repository.User, error) {
 }
 
 func (s *userService) Get(id int) (*repository.User, error) {
+	log.Fatalf("auth service error: ")
 	return s.repo.Get(id)
 }
 

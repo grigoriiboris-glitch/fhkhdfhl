@@ -11,7 +11,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/jackc/pgx/v5/pgxpool"
-
+	"github.com/go-chi/chi/v5"
 	"github.com/mymindmap/api/internal/auth"
 	"github.com/mymindmap/api/internal/http/routes"
 )
@@ -36,7 +36,7 @@ func loadConfig() (*Config, error) {
 
 	if jwtSecret == "" {
 		jwtSecret = "default-jwt-secret-change-in-production"
-		log.Println("WARNING: Using default JWT secret. Set JWT_SECRET env variable in production!")
+		//log.Println("WARNING: Using default JWT secret. Set JWT_SECRET env variable in production!")
 	}
 
 	connStr := fmt.Sprintf(
@@ -71,6 +71,7 @@ func main() {
 	dbpool, err := pgxpool.New(ctx, conf.PostgresURL)
 	if err != nil {
 		log.Fatalf("db connection error: %v", err)
+		log.Println("db connection error: %v", err)
 	}
 	defer dbpool.Close()
 
@@ -92,17 +93,10 @@ func main() {
 
 	// Оборачиваем основной роутер в chi.Router для добавления ручных маршрутов
 	r := chi.NewRouter()
-	r.Mount("/", mainRouter) // подключаем все CRUD маршруты
 
-	// ===== Ручные маршруты =====
-	r.Get("/manual/hello", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello from manual route!"))
-	})
 
-	// r.Get("/manual/secure", routes.JWTMiddleware(authConfig)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// 	userID := r.Context().Value("userID")
-	// 	w.Write([]byte(fmt.Sprintf("Secure manual route, userID=%v", userID)))
-	// })).ServeHTTP)
+	r.Mount("/api", mainRouter) // подключаем все CRUD маршруты
+
 
 	addr := ":8000"
 	log.Printf("server started on %s", addr)

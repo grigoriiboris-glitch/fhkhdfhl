@@ -17,6 +17,11 @@ const (
 // AuthMiddleware проверяет JWT токен и добавляет пользователя в контекст
 func AuthMiddleware(authService *auth.AuthService, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		 if authService == nil {
+            http.Error(w, "Authentication service unavailable", http.StatusInternalServerError)
+            return
+        }
 		// Получаем токен из заголовка Authorization
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {

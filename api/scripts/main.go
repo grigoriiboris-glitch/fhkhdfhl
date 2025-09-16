@@ -163,7 +163,7 @@ func generateCRUD(model Model) {
 		fmt.Sprintf("/app/internal/http/requests/%s/create_%s_request.go", strings.ToLower(model.Name), strings.ToLower(model.Name)): "create_request.tmpl",
 		fmt.Sprintf("/app/internal/http/requests/%s/update_%s_request.go", strings.ToLower(model.Name), strings.ToLower(model.Name)): "update_request.tmpl",
 		fmt.Sprintf("/app/internal/http/requests/%s/list_%s_request.go", strings.ToLower(model.Name), strings.ToLower(model.Name)): "list_request.tmpl",
-		fmt.Sprintf("/app/internal/services/%s/%s_service.go", strings.ToLower(model.Name), strings.ToLower(model.Name)): "service.tmpl",
+		fmt.Sprintf("/app/internal/services/%s%s/%s_service.go", strings.ToLower(model.Name), "_service", strings.ToLower(model.Name)): "service.tmpl",
 		fmt.Sprintf("/app/repository/%s_repository.go", strings.ToLower(model.Name)): "repository.tmpl",
 	}
 
@@ -175,7 +175,7 @@ func generateCRUD(model Model) {
 
 	for path, tmplFile := range files {
 		if _, err := os.Stat(path); err == nil {
-			fmt.Printf("⚠️  file already exists, skipping: %s\n", path)
+			//fmt.Printf("⚠️  file already exists, skipping: %s\n", path)
 			//continue
 		}
 

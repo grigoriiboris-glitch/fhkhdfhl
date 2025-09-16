@@ -28,12 +28,25 @@ async function me() {
   try {
     const response = await axios.get('/auth/user');
     if (response.status === 200) {
+      axios.post(
+        '/api/logs',
+        {
+          title: 'title',
+          content: 'content',
+          user_id: 1
+        },
+      );
+      axios.get(
+        '/api/health',
+      );
+      
       const data = response.data;
       state.user = data;
       state.User = data ? new User(data) : null;
       state.isAuthenticated = true;
       return state.user;
     }
+
     state.user = null;
     state.User = null;
     state.isAuthenticated = false;

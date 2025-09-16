@@ -3,10 +3,10 @@ tmp_dir = "tmp"
 
 [build]
 cmd = "go build -o bin/server ./cmd/server"
-bin = "./tmp/main"
+bin = "./bin/server"
 full_bin = ""
 log = "build-errors.log"
 pre_cmds = ["go mod tidy"]
 
 include_ext = ["go", "tpl", "tmpl", "html"]
-exclude_dir = ["tmp", "vendor", "node_modules", "temp"]
+exclude_dir = ["tmp", "vendor", "node_modules", "temp", "pkg/relations"]

@@ -1,45 +1,104 @@
 package repository
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
 
-	"github.com/mymindmap/api/models"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"{{ .Module }}/models"
 )
 
-type LogRepository struct {
-	db *sql.DB
+type {{ .Name }}Repository struct {
+	pool *pgxpool.Pool
+	fields []string
+	tableName string
 }
 
-func NewLogRepository(db *sql.DB) *LogRepository {
-	return &LogRepository{db: db}
+func New{{ .Name }}Repository(pool *pgxpool.Pool) *{{ .Name }}Repository {
+	// Use a simple default table name based on the model name
+	tableName := "{{ .Name | lower }}s"
+	
+	return &{{ .Name }}Repository{
+		pool: pool,
+		fields: []string{}, // Will be populated dynamically when needed
+		tableName: tableName,
+	}
 }
 
-func (r *LogRepository) Create(entity *models.Log) error {
+// Add this method to populate fields on demand
+func (r *{{ .Name }}Repository) getFields() []string {
+	if len(r.fields) == 0 {
+		// Dynamically generate fields from the model structure
+		modelType := reflect.TypeOf(models.{{ .Name }}{})
+		for i := 0; i < modelType.NumField(); i++ {
+			field := modelType.Field(i)
+			dbTag := r.getDBTag(field)
+			r.fields = append(r.fields, dbTag)
+		}
+	}
+	return r.fields
+}
+
+func (r *{{ .Name }}Repository) getDBTag(field reflect.StructField) string {
+	dbTag := field.Tag.Get("db")
+	if dbTag == "" {
+		return strings.ToLower(field.Name)
+	}
+	return dbTag
+}
+
+func (r *{{ .Name }}Repository) getInsertFields(entity *models.{{ .Name }}) ([]string, []interface{}) {
 	var fields []string
-	var placeholders []string
 	var values []interface{}
 	
-	fields = append(fields, "title")
-	placeholders = append(placeholders, fmt.Sprintf("$%d", len(values)+1))
-	values = append(values, entity.Title)
+	val := reflect.ValueOf(entity).Elem()
+	typ := val.Type()
+
+	for i := 0; i < val.NumField(); i++ {
+		field := typ.Field(i)
+		fieldValue := val.Field(i)
+		
+		// Пропускаем ID и автоматически генерируемые поля
+		if field.Name == "ID" || field.Name == "CreatedAt" || field.Name == "UpdatedAt" {
+			continue
+		}
+		
+		// Пропускаем нулевые значения, если не требуется
+		if !fieldValue.IsZero() {
+			dbTag := r.getDBTag(field)
+			fields = append(fields, dbTag)
+			values = append(values, fieldValue.Interface())
+		}
+	}
 	
-	fields = append(fields, "content")
-	placeholders = append(placeholders, fmt.Sprintf("$%d", len(values)+1))
-	values = append(values, entity.Content)
+	return fields, values
+}
+
+func (r *{{ .Name }}Repository) Create(ctx context.Context, entity *models.{{ .Name }}) error {
+	fields, values := r.getInsertFields(entity)
 	
-	fields = append(fields, "user_id")
-	placeholders = append(placeholders, fmt.Sprintf("$%d", len(values)+1))
-	values = append(values, entity.UserId)
+	if len(fields) == 0 {
+		return fmt.Errorf("no fields to insert")
+	}
 	
-	query := "INSERT INTO logs (" + strings.Join(fields, ", ") + ") VALUES (" + strings.Join(placeholders, ", ") + ")"
-	_, err := r.db.Exec(query, values...)
+	// Создаем плейсхолдеры
+	placeholders := make([]string, len(fields))
+	for i := range fields {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+	}
+	
+	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", 
+		r.tableName, 
+		strings.Join(fields, ", "), 
+		strings.Join(placeholders, ", "))
+	
+	_, err := r.pool.Exec(ctx, query, values...)
 	return err
 }
 
-func (r *LogRepository) Update(id int, updates interface{}) error {
+func (r *{{ .Name }}Repository) Update(ctx context.Context, id int, updates interface{}) error {
 	var setClauses []string
 	var values []interface{}
 
@@ -50,11 +109,17 @@ func (r *LogRepository) Update(id int, updates interface{}) error {
 			return fmt.Errorf("no fields to update")
 		}
 
-		// Разрешенные поля для обновления
-		allowedFields := map[string]bool{
-			"title": true,
-			"content": true,
-			"user_id": true,
+		// Автоматическая проверка допустимых полей на основе модели
+		val := reflect.ValueOf(&models.{{ .Name }}{}).Elem()
+		typ := val.Type()
+		allowedFields := make(map[string]bool)
+		
+		for i := 0; i < val.NumField(); i++ {
+			field := typ.Field(i)
+			if field.Name != "ID" && field.Name != "CreatedAt" {
+				dbTag := r.getDBTag(field)
+				allowedFields[dbTag] = true
+			}
 		}
 
 		for field, value := range u {
@@ -64,7 +129,7 @@ func (r *LogRepository) Update(id int, updates interface{}) error {
 			}
 		}
 
-	case *models.Log:
+	case *models.{{ .Name }}:
 		// Обработка частичной структуры
 		val := reflect.ValueOf(u).Elem()
 		typ := val.Type()
@@ -73,17 +138,14 @@ func (r *LogRepository) Update(id int, updates interface{}) error {
 			field := typ.Field(i)
 			fieldValue := val.Field(i)
 
-			// Пропускаем ID и CreatedAt
+			// Пропускаем ID и автоматически генерируемые поля
 			if field.Name == "ID" || field.Name == "CreatedAt" {
 				continue
 			}
 
 			// Проверяем, установлено ли поле (не нулевое значение)
 			if !fieldValue.IsZero() {
-				dbTag := field.Tag.Get("db")
-				if dbTag == "" {
-					dbTag = strings.ToLower(field.Name)
-				}
+				dbTag := r.getDBTag(field)
 				setClauses = append(setClauses, fmt.Sprintf("%s = $%d", dbTag, len(values)+1))
 				values = append(values, fieldValue.Interface())
 			}
@@ -98,33 +160,55 @@ func (r *LogRepository) Update(id int, updates interface{}) error {
 	}
 
 	values = append(values, id)
-	query := "UPDATE logs SET " + strings.Join(setClauses, ", ") + " WHERE id = $" + fmt.Sprintf("%d", len(values))
-	_, err := r.db.Exec(query, values...)
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE id = $%d", 
+		r.tableName, 
+		strings.Join(setClauses, ", "), 
+		len(values))
+	
+	_, err := r.pool.Exec(ctx, query, values...)
 	return err
 }
 
-func (r *LogRepository) Delete(id int) error {
-	query := "DELETE FROM logs WHERE id = $1"
-	_, err := r.db.Exec(query, id)
+func (r *{{ .Name }}Repository) Delete(ctx context.Context, id int) error {
+	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", r.tableName)
+	_, err := r.pool.Exec(ctx, query, id)
 	return err
 }
 
-func (r *LogRepository) List(limit, offset int) ([]models.Log, error) {
-	query := "SELECT * FROM logs LIMIT $1 OFFSET $2"
-	rows, err := r.db.Query(query, limit, offset)
+func (r *{{ .Name }}Repository) List(ctx context.Context, limit, offset int) ([]models.{{ .Name }}, error) {
+	query := fmt.Sprintf("SELECT %s FROM %s ORDER BY created_at DESC LIMIT $1 OFFSET $2", 
+		strings.Join(r.getFields(), ", "), 
+		r.tableName)
+	
+	rows, err := r.pool.Query(ctx, query, limit, offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var items []models.Log
+	var items []models.{{ .Name }}
 	for rows.Next() {
-		var e models.Log
-		// TODO: rows.Scan(...) по полям
-		if err := rows.Scan(&e.ID, &e.Title, &e.Content, &e.UserId, &e.CreatedAt); err != nil {
+		var item models.{{ .Name }}
+		
+		// Автоматическое сканирование на основе полей модели
+		scanValues := make([]interface{}, len(r.fields))
+		val := reflect.ValueOf(&item).Elem()
+		
+		for i, fieldName := range r.fields {
+			for j := 0; j < val.NumField(); j++ {
+				field := val.Type().Field(j)
+				dbTag := r.getDBTag(field)
+				if dbTag == fieldName {
+					scanValues[i] = val.Field(j).Addr().Interface()
+					break
+				}
+			}
+		}
+		
+		if err := rows.Scan(scanValues...); err != nil {
 			return nil, err
 		}
-		items = append(items, e)
+		items = append(items, item)
 	}
 	
 	if err := rows.Err(); err != nil {
@@ -134,19 +218,84 @@ func (r *LogRepository) List(limit, offset int) ([]models.Log, error) {
 	return items, nil
 }
 
-// Get - дополнительный метод для получения по ID
-func (r *LogRepository) Get(id int) (*models.Log, error) {
-	query := "SELECT id, title, content, user_id, created_at FROM logs WHERE id = $1"
-	row := r.db.QueryRow(query, id)
+func (r *{{ .Name }}Repository) Get(ctx context.Context, id int) (*models.{{ .Name }}, error) {
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE id = $1", 
+		strings.Join(r.fields, ", "), 
+		r.tableName)
 	
-	var log models.Log
-	err := row.Scan(&log.ID, &log.Title, &log.Content, &log.UserId, &log.CreatedAt)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("log not found")
+	row := r.pool.QueryRow(ctx, query, id)
+	
+	var item models.{{ .Name }}
+	
+	// Автоматическое сканирование на основе полей модели
+	scanValues := make([]interface{}, len(r.fields))
+	val := reflect.ValueOf(&item).Elem()
+	
+	for i, fieldName := range r.fields {
+		for j := 0; j < val.NumField(); j++ {
+			field := val.Type().Field(j)
+			dbTag := r.getDBTag(field)
+			if dbTag == fieldName {
+				scanValues[i] = val.Field(j).Addr().Interface()
+				break
+			}
 		}
+	}
+	
+	err := row.Scan(scanValues...)
+	if err != nil {
+		return nil, fmt.Errorf("%s not found: %w", strings.ToLower("{{ .Name }}"), err)
+	}
+	
+	return &item, nil
+}
+
+func (r *{{ .Name }}Repository) Count(ctx context.Context) (int, error) {
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s", r.tableName)
+	var count int
+	err := r.pool.QueryRow(ctx, query).Scan(&count)
+	return count, err
+}
+
+// FindByUserID возвращает записи по ID пользователя
+func (r *{{ .Name }}Repository) FindByUserID(ctx context.Context, userID int, limit, offset int) ([]models.{{ .Name }}, error) {
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3", 
+		strings.Join(r.fields, ", "), 
+		r.tableName)
+	
+	rows, err := r.pool.Query(ctx, query, userID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []models.{{ .Name }}
+	for rows.Next() {
+		var item models.{{ .Name }}
+		
+		scanValues := make([]interface{}, len(r.fields))
+		val := reflect.ValueOf(&item).Elem()
+		
+		for i, fieldName := range r.fields {
+			for j := 0; j < val.NumField(); j++ {
+				field := val.Type().Field(j)
+				dbTag := r.getDBTag(field)
+				if dbTag == fieldName {
+					scanValues[i] = val.Field(j).Addr().Interface()
+					break
+				}
+			}
+		}
+		
+		if err := rows.Scan(scanValues...); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	
+	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 	
-	return &log, nil
+	return items, nil
 }
