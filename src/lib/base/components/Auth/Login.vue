@@ -1,18 +1,8 @@
 <template>
-  <div class="register-container">
-    <div class="register-form">
-      <h2>{{ $t('auth.register') }}</h2>
-      <form @submit.prevent="handleRegister">
-        <div class="form-group">
-          <label for="name">{{ $t('auth.name') }}</label>
-          <input
-            type="text"
-            id="name"
-            v-model="name"
-            required
-            :placeholder="$t('auth.namePlaceholder')"
-          />
-        </div>
+  <div class="login-container">
+    <div class="login-form">
+      <h2>{{ $t('auth.login') }}</h2>
+      <form @submit.prevent="handleLogin">
         <div class="form-group">
           <label for="email">{{ $t('auth.email') }}</label>
           <input
@@ -33,29 +23,16 @@
             :placeholder="$t('auth.passwordPlaceholder')"
           />
         </div>
-        <div class="form-group">
-          <label for="confirmPassword">{{ $t('auth.confirmPassword') }}</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            v-model="confirmPassword"
-            required
-            :placeholder="$t('auth.confirmPasswordPlaceholder')"
-          />
-        </div>
         <div class="form-actions">
-          <button type="submit" :disabled="loading || !passwordsMatch">
-            {{ loading ? $t('auth.registering') : $t('auth.register') }}
+          <button type="submit" :disabled="loading">
+            {{ loading ? $t('auth.loggingIn') : $t('auth.login') }}
           </button>
-          <button type="button" @click="$emit('switch-to-login')">
-            {{ $t('auth.haveAccount') }}
+          <button type="button" @click="$emit('switch-to-register')">
+            {{ $t('auth.noAccount') }}
           </button>
         </div>
         <div v-if="error" class="error-message">
           {{ error }}
-        </div>
-        <div v-if="!passwordsMatch && confirmPassword" class="error-message">
-          {{ $t('auth.passwordsNotMatch') }}
         </div>
       </form>
     </div>
@@ -63,38 +40,27 @@
 </template>
 
 <script>
-import useAuth from '@/composition/useAuth'
+import useAuth from '../../composition/useAuth'
 export default {
-  name: 'Register',
+  name: 'Login',
   data() {
     return {
-      name: '',
       email: '',
       password: '',
-      confirmPassword: '',
       loading: false,
       error: ''
     }
   },
-  computed: {
-    passwordsMatch() {
-      return this.password === this.confirmPassword
-    }
-  },
   methods: {
-    async handleRegister() {
-      if (!this.passwordsMatch) {
-        return
-      }
-
-      const { register } = useAuth()
+    async handleLogin() {
+      const { login } = useAuth()
       this.loading = true
       this.error = ''
-      const ok = await register(this.name, this.email, this.password)
+      const ok = await login(this.email, this.password)
       if (ok) {
-        this.$emit('register-success')
+        this.$emit('login-success')
       } else {
-        this.error = this.$t('auth.registerError')
+        this.error = this.$t('auth.loginError')
       }
       this.loading = false
     }
@@ -103,7 +69,7 @@ export default {
 </script>
 
 <style scoped>
-.register-container {
+.login-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -111,7 +77,7 @@ export default {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.register-form {
+.login-form {
   background: white;
   padding: 2rem;
   border-radius: 8px;
@@ -120,7 +86,7 @@ export default {
   max-width: 400px;
 }
 
-.register-form h2 {
+.login-form h2 {
   text-align: center;
   margin-bottom: 1.5rem;
   color: #333;

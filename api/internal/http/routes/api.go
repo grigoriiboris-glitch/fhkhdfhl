@@ -25,7 +25,7 @@ func NewRouter(ctx context.Context, dbpool *pgxpool.Pool, authConfig *auth.Confi
 	logService := log_service.NewLogService(logRepo)
 	authService, err := auth.NewAuthService(userRepo, authConfig)
 
-	if err != nil {
+	if err != nil  { 
 		log.Fatalf("auth service error: %v", err)
 	}
 

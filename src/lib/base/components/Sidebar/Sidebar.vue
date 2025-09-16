@@ -55,7 +55,7 @@
 import { ref, computed, defineProps, onBeforeMount, onMounted, getCurrentInstance } from 'vue';
 
 
-import useAuth from '@/composition/useAuth';
+import useAuth from '../../composition/useAuth';
 import { useRouter, useRoute } from 'vue-router';
 
 import { useStore } from 'vuex';

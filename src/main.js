@@ -27,4 +27,4 @@ app.use(i18n);
 
 app.mount('#app');
 
-import icon from '@/components/base/components/ui/icon';
+import icon from '@/lib/base/components/ui/icon';

@@ -5,7 +5,7 @@ bootstrap.min.css v4.4.1 подключить в public/index.html
 
 добавить store import baseStore from './components/base/store' в main.js
 
-в vue.config.js добавить и перенести в корень проекта папку scss
+можно в vue.config.js добавить и перенести в корень проекта папку scss
 css: {
     requireModuleExtension: false,
     loaderOptions: {
@@ -18,6 +18,6 @@ css: {
 в router.js добавить мета инфу
 
 meta: {
-      title: 'Мои карты',
+      title: 'title',
       roles: [1, 2,3],
 },

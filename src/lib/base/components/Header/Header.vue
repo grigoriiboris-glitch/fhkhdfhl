@@ -93,7 +93,7 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue';
 import { useStore } from 'vuex';
-import useAuth from '@/composition/useAuth.js';
+import useAuth from '../../composition/useAuth';
 
 import Menu from '../../assets/sidebar/Fill/Menu.svg';
 import Exchange from '../../assets/sidebar/Fill/Exchange.svg';

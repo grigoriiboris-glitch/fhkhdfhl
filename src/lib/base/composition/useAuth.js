@@ -1,6 +1,6 @@
 import { reactive, toRef } from "vue";
 import router from "@/router";
-import User from "@/models/User";
+import User from "../models/User";
 import axios from "axios";
 
 const state = reactive({
@@ -100,7 +100,7 @@ async function register(name, email, password) {
 
 async function logout() {
   try {
-    await axios.get('/auth/logout');
+    await axios.post('/auth/logout');
   } finally {
     state.user = null;
     state.User = null;

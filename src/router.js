@@ -1,9 +1,7 @@
 import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import IndexPage from '@/pages/Index/Index'
 import MindMapList from '@/components/MindMapList.vue'
-import Login from '@/components/Auth/Login.vue'
-import Register from '@/components/Auth/Register.vue'
-import useAuth from './composition/useAuth'
+import useAuth from './lib/base/composition/useAuth'
 
 const routes = [
   {
@@ -44,18 +42,9 @@ const routes = [
     },
   },
   {
-    path: '/login',
-    name: 'Login',
-    component: Login,
-    meta: {
-      title: 'Login',
-      roles: [1, 2, 3],
-    },
-  },
-  {
     path: '/profile',
     name: 'profile',
-    component: Login,
+    component: IndexPage,
     meta: {
       title: 'profile',
       roles: [1, 2, 3],
@@ -64,22 +53,12 @@ const routes = [
   {
     path: '/tariffs',
     name: 'tariffs',
-    component: Login,
+    component: IndexPage,
     meta: {
       title: 'tariffs',
       roles: [1, 2, 3],
     },
   },
-
-  {
-    path: '/register',
-    name: 'Register',
-    component: Register,
-    meta: {
-      title: 'Register',
-      roles: [1, 2, 3],
-    },
-  }
 ]
 
 const router = createRouter({
@@ -96,12 +75,11 @@ router.beforeEach(async (to, from, next) => {
   if (!dataRoute.includes(to.name) && !User.value) {
     await me();
     if (!User.value) {
-      next('/login')
+      next('/')
     }
   }
 
   if (to.name === "login" && User.value) {
-    log(User.value)
     next('/');
   }
 
