@@ -1,10 +1,7 @@
 package models
 
 import (
-	//"database/sql"
 	"time"
-
-	//"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mymindmap/api/pkg/relations"
 )
 
