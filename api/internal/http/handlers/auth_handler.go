@@ -22,16 +22,6 @@ func NewAuthHandler(authService *auth.AuthService, userRepo *repository.UserRepo
 	return &AuthHandler{authService: authService, userRepo: userRepo, logger: logger}
 }
 
-// Регистрируем маршруты
-func (h *AuthHandler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/auth/login", h.Login)
-	mux.HandleFunc("/auth/register", h.Register)
-	mux.HandleFunc("/auth/logout", h.Logout)
-	mux.HandleFunc("/auth/refresh", h.RefreshToken)
-	mux.HandleFunc("/auth/check", middleware.AuthMiddleware(h.authService, h.Check))
-	mux.HandleFunc("/auth/user", middleware.AuthMiddleware(h.authService, h.GetCurrentUser))
-}
-
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -220,7 +210,8 @@ func (h *AuthHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.userRepo.GetUserByID(r.Context(), claims.UserID)
 	if err != nil || user == nil {
-		h.respondError(w, http.StatusInternalServerError, "failed to get user")
+		log.Printf("GetCurrentUser %s",err)
+		h.respondError(w, http.StatusInternalServerError, "GetCurrentUser failed to get  user")
 		return
 	}
 

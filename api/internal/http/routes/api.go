@@ -34,12 +34,12 @@ func NewRouter(ctx context.Context, dbpool *pgxpool.Pool, authConfig *auth.Confi
 	auth_handler := handlers.NewAuthHandler(authService,userRepo,log.Default())
 
 	r.Route("/auth", func(r chi.Router) {
-    r.Post("/login", auth_handler.Login)
-    r.Post("/register", auth_handler.Register)
-    r.Post("/logout", auth_handler.Logout)
-    r.Post("/refresh", auth_handler.RefreshToken)
-    r.Get("/check", middleware.AuthMiddleware(authService, auth_handler.Check))
-    r.Get("/user", middleware.AuthMiddleware(authService, auth_handler.GetCurrentUser))
+        r.Post("/login", auth_handler.Login)
+        r.Post("/register", auth_handler.Register)
+        r.Post("/logout", auth_handler.Logout)
+        r.Post("/refresh", auth_handler.RefreshToken)
+        r.Get("/check", middleware.AuthMiddleware(authService, auth_handler.Check))
+        r.Get("/user", middleware.AuthMiddleware(authService, auth_handler.GetCurrentUser))
     })
 
 

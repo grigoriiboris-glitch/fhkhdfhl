@@ -9,4 +9,4 @@ log = "build-errors.log"
 pre_cmds = ["go mod tidy"]
 
 include_ext = ["go", "tpl", "tmpl", "html"]
-exclude_dir = ["tmp", "vendor", "node_modules", "temp", "pkg/relations"]
+exclude_dir = ["tmp", "vendor", "node_modules", "temp"]

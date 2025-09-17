@@ -52,7 +52,7 @@ func (h *UserHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
     if err != nil || user == nil {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusInternalServerError)
-        _ = json.NewEncoder(w).Encode(map[string]string{"error": "failed to get user"})
+        _ = json.NewEncoder(w).Encode(map[string]string{"error": "failed to get use handr"})
         return
     }
     w.Header().Set("Content-Type", "application/json")

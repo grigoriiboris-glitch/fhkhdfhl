@@ -301,7 +301,7 @@ func (s *AuthService) LoginUser(ctx context.Context, req *models.LoginRequest) (
 	user, err := s.userRepo.GetUserByEmail(ctx, email)
 	if err != nil {
 		s.logError("failed to get user", err, "email", email)
-		return nil, fmt.Errorf("failed to get user: %w", err)
+		return nil, fmt.Errorf("failed to get user2: %w", err)
 	}
 	if user == nil {
 		// Запись неудачной попытки для лимитера
@@ -430,7 +430,7 @@ func (s *AuthService) RefreshToken(refreshTokenString string) (*TokenPair, error
 	// Получение актуальных данных пользователя из БД
 	user, err := s.userRepo.GetUserByID(context.Background(), claims.UserID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user: %w", err)
+		return nil, fmt.Errorf("failed to get user1: %w", err)
 	}
 	if user == nil {
 		return nil, ErrInvalidToken

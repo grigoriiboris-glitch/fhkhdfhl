@@ -18,7 +18,9 @@ type MindMap struct {
 	User   *User
 	db *pgxpool.Pool
 }
-
+func (u *MindMap) GetID() interface{} {
+    return u.ID
+}
 func (m *MindMap) GetTableName() string { return "mindmaps" }
 func (m *MindMap) GetConnection() *pgxpool.Pool { return m.db }
 
