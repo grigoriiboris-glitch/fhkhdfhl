@@ -1,6 +1,9 @@
-package user
+package user_requests
 
-import "github.com/go-playground/validator/v10"
+import(
+    "strings"
+    "github.com/go-playground/validator/v10"
+)
 
 type CreateUserRequest struct {
     Name string `json:"name" validate:"required"`
@@ -10,6 +13,8 @@ type CreateUserRequest struct {
 }
 
 func (r *CreateUserRequest) Validate() error {
+    r.Email = strings.TrimSpace(r.Email)
+    r.Password = strings.TrimSpace(r.Password)
     v := validator.New()
     return v.Struct(r)
 }

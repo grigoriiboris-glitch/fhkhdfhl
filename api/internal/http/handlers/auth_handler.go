@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/mymindmap/api/internal/auth"
+	"github.com/mymindmap/api/internal/http/requests/user_requests"
 	"github.com/mymindmap/api/internal/http/middleware"
 	"github.com/mymindmap/api/models"
 	"github.com/mymindmap/api/repository"
@@ -46,7 +47,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req := &models.LoginRequest{Email: creds.Email, Password: creds.Password}
+	req := &user_requests.LoginUserRequest{Email: creds.Email, Password: creds.Password}
 	tokenPair, err := h.authService.LoginUser(r.Context(), req)
 	if err != nil {
 		h.respondError(w, http.StatusUnauthorized, err.Error())

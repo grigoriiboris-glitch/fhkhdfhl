@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
-
+	"github.com/mymindmap/api/internal/http/requests/user_requests"
 	"github.com/mymindmap/api/models"
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
@@ -284,12 +284,11 @@ func (s *AuthService) RegisterUser(ctx context.Context, req *models.RegisterRequ
 
 // LoginUser аутентифицирует пользователя и выдает токены
 // Проверяет учетные данные, лимиты запросов и создает JWT токены
-func (s *AuthService) LoginUser(ctx context.Context, req *models.LoginRequest) (*TokenPair, error) {
-	if err := s.validateLoginRequest(req); err != nil {
+func (s *AuthService) LoginUser(ctx context.Context, req *user_requests.LoginUserRequest) (*TokenPair, error) {
+	if err := req.Validate(); err != nil {
 		return nil, err
 	}
-
-	email := strings.ToLower(strings.TrimSpace(req.Email))
+	email := req.Email
 
 	// Проверка лимита запросов (защита от брутфорса)
 	if s.rateLimiter != nil && !s.rateLimiter.IsAllowed(email) {
