@@ -9,7 +9,7 @@ import (
 	"github.com/mymindmap/api/internal/auth"
 	"github.com/mymindmap/api/internal/http/requests/user_requests"
 	"github.com/mymindmap/api/internal/http/middleware"
-	"github.com/mymindmap/api/models"
+	//"github.com/mymindmap/api/models"
 	"github.com/mymindmap/api/repository"
 )
 
@@ -81,7 +81,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req models.RegisterRequest
+	var req user_requests.CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.respondError(w, http.StatusBadRequest, "invalid json")
 		return

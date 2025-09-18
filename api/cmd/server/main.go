@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/mymindmap/api/internal/auth"
 	"github.com/mymindmap/api/internal/http/routes"
+    "github.com/mymindmap/api/pkg/validator"
 )
 
 type Config struct {
@@ -57,6 +58,7 @@ func main() {
 		log.Fatalf("config error: %v", err)
 	}
 
+	validator.Init()
 	// Логирование в файл + stdout
 	if err := os.MkdirAll("logs", 0755); err == nil {
 		logFilePath := filepath.Join("logs", "server.log")

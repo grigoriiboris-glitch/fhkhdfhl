@@ -9,7 +9,7 @@ import (
 
 	"github.com/mymindmap/api/internal/auth"
 	"github.com/mymindmap/api/internal/http/handlers"
-	"github.com/mymindmap/api/internal/services/log_service"
+	//"github.com/mymindmap/api/internal/services/log_service"
 	"github.com/mymindmap/api/repository"
 	"github.com/mymindmap/api/internal/http/middleware"
 )
@@ -18,11 +18,11 @@ func NewRouter(ctx context.Context, dbpool *pgxpool.Pool, authConfig *auth.Confi
 	r := chi.NewRouter()
 
 	// ===== Repositories =====
-	logRepo := repository.NewLogRepository(dbpool)
+	//logRepo := repository.NewLogRepository(dbpool)
 	userRepo := repository.NewUserRepository(dbpool)
 
 	// ===== Services =====
-	logService := log_service.NewLogService(logRepo)
+	//logService := log_service.NewLogService(logRepo)
 	authService, err := auth.NewAuthService(userRepo, authConfig)
 
 	if err != nil  { 
@@ -30,7 +30,7 @@ func NewRouter(ctx context.Context, dbpool *pgxpool.Pool, authConfig *auth.Confi
 	}
 
 	// ===== Handlers =====
-	logHandler := handlers.NewLogHandler(logService)
+	//logHandler := handlers.NewLogHandler(logService)
 	auth_handler := handlers.NewAuthHandler(authService,userRepo,log.Default())
 
 	r.Route("/auth", func(r chi.Router) {
@@ -53,13 +53,13 @@ func NewRouter(ctx context.Context, dbpool *pgxpool.Pool, authConfig *auth.Confi
 		_, _ = w.Write([]byte(`{"status":"OK"}`))
 	})
 
-		r.Route("/logs", func(r chi.Router) {
-			r.Get("/", logHandler.List)
-			r.Post("/", logHandler.Create)
-			r.Get("/{id}", logHandler.Get)
-			r.Put("/{id}", logHandler.Update)
-			r.Delete("/{id}", logHandler.Delete)
-		})
+		// r.Route("/logs", func(r chi.Router) {
+		// 	r.Get("/", logHandler.List)
+		// 	r.Post("/", logHandler.Create)
+		// 	r.Get("/{id}", logHandler.Get)
+		// 	r.Put("/{id}", logHandler.Update)
+		// 	r.Delete("/{id}", logHandler.Delete)
+		// })
 
 		// Healthcheck under /api
 		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {

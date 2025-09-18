@@ -233,7 +233,7 @@ func (s *AuthService) initializePolicies() error {
 
 // RegisterUser регистрирует нового пользователя в системе
 // Валидирует данные, хеширует пароль, создает запись в БД и назначает роль
-func (s *AuthService) RegisterUser(ctx context.Context, req *models.RegisterRequest) (*models.User, error) {
+func (s *AuthService) RegisterUser(ctx context.Context, req *user_requests.CreateUserRequest) (*models.User, error) {
 	if err := s.validateRegistrationRequest(req); err != nil {
 		return nil, err
 	}
@@ -510,7 +510,7 @@ func (s *AuthService) RemoveRoleForUser(email, role string) error {
 // Методы валидации
 
 // validateRegistrationRequest валидирует данные для регистрации
-func (s *AuthService) validateRegistrationRequest(req *models.RegisterRequest) error {
+func (s *AuthService) validateRegistrationRequest(req *user_requests.CreateUserRequest) error {
 	if req == nil {
 		return errors.New("registration request is required")
 	}
